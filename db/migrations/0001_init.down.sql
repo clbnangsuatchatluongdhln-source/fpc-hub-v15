@@ -1,0 +1,17 @@
+DROP VIEW IF EXISTS public.profiles_public CASCADE;
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+DROP FUNCTION IF EXISTS public.handle_new_user();
+DROP TRIGGER IF EXISTS trg_prevent_role_self_change ON public.profiles;
+DROP FUNCTION IF EXISTS public.prevent_role_self_change();
+DROP TRIGGER IF EXISTS trg_profiles_touch ON public.profiles;
+DROP TRIGGER IF EXISTS trg_departments_touch ON public.departments;
+DROP FUNCTION IF EXISTS public.touch_row();
+DROP FUNCTION IF EXISTS public.is_club_admin();
+DROP FUNCTION IF EXISTS public.is_super_admin();
+DROP TABLE IF EXISTS public.department_members CASCADE;
+DROP TABLE IF EXISTS public.departments CASCADE;
+DROP TABLE IF EXISTS public.profiles CASCADE;
+DROP TYPE IF EXISTS public.dept_role;
+DROP TYPE IF EXISTS public.approval_status;
+DROP TYPE IF EXISTS public.user_role;
+DROP TABLE IF EXISTS public.schema_migrations CASCADE;

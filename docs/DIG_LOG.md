@@ -6,3 +6,5 @@
 | T2 | 2026-10-19 | Code style | ESLint v10 flat config + Prettier | ESLint v10 bỏ .eslintrc | Flat config | 7c28e75 | T3 |
 | T3 | 2026-10-19 | Test framework | Vitest 5.0.5, 3 test pass | Vitest nhanh hơn Jest | — | [hash] | T4 |
 | T4 | 2026-10-19 | Kết nối Supabase | Client + env + test 404 | PGRST205 = connected OK | Dùng project mới auqxbigkttrktwsfrdba | [hash] | → ZOOM 1 |
+| T5 | 2026-10-19 | Nền tảng Database | Sửa lỗi Smart Quote, chạy Script tạo 4 bảng, 3 Enums, Triggers & RLS | Lỗi nháy cong do copy/paste | Chạy SQL theo từng Part để dễ cô lập lỗi | [hash] | T6 |
+
