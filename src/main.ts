@@ -58,3 +58,16 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 `
 
 setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+
+import { supabase } from './core/supabase';
+
+(async () => {
+  const { error } = await supabase.from('_nonexistent').select('*').limit(1);
+  if (error?.code === 'PGRST205') {
+    console.log('✅ Supabase kết nối OK — public schema trống');
+  } else if (error) {
+    console.error('❌ Supabase lỗi:', error.message);
+  } else {
+    console.log('✅ Supabase kết nối OK');
+  }
+})();
