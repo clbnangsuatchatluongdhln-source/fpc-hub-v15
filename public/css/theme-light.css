@@ -1,0 +1,689 @@
+/* ============================================================
+   FPC LAB · theme-light.css
+   Override cho theme sáng — kích hoạt khi <html data-theme="light">
+   ------------------------------------------------------------
+   Quy ước:
+   - Mọi rule PHẢI bắt đầu bằng html[data-theme="light"]
+   - Không dùng !important trừ khi cần thiết
+   - Chia thành nhiều bước A1, A2, A3... — mỗi bước 1 nhóm component
+   ============================================================ */
+
+/* ═══════════════════════════════════════════════════════════
+   A1 — NỀN + CHỮ CƠ BẢN
+   ═══════════════════════════════════════════════════════════ */
+
+html[data-theme="light"] body {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+/* Nền gradient mờ (bg-subtle) — đổi thành tông sáng */
+html[data-theme="light"] .bg-subtle {
+  background:
+    radial-gradient(900px 600px at 8% 5%, rgba(139,92,246,.08), transparent 55%),
+    radial-gradient(900px 600px at 92% 95%, rgba(236,72,153,.06), transparent 55%),
+    radial-gradient(700px 500px at 50% 50%, rgba(34,211,238,.04), transparent 60%);
+}
+
+/* Selection highlight — đổi nhẹ cho hợp nền sáng */
+html[data-theme="light"] ::selection {
+  background: rgba(236,72,153,.25);
+  color: #0f172a;
+}
+
+/* --- Chữ trắng → đen --- */
+html[data-theme="light"] .text-white {
+  color: #0f172a;
+}
+
+/* --- Thang slate: làm đậm lên 1 bậc để đọc rõ trên nền sáng --- */
+html[data-theme="light"] .text-slate-100 { color: #1e293b; }
+html[data-theme="light"] .text-slate-200 { color: #334155; }
+html[data-theme="light"] .text-slate-300 { color: #475569; }
+html[data-theme="light"] .text-slate-400 { color: #64748b; }
+html[data-theme="light"] .text-slate-500 { color: #64748b; }
+html[data-theme="light"] .text-slate-600 { color: #475569; }
+html[data-theme="light"] .text-slate-700 { color: #334155; }
+/* ═══════════════════════════════════════════════════════════
+   A2 — GLASS FAMILY + NAV + BORDER
+   ═══════════════════════════════════════════════════════════ */
+
+/* --- .glass: khung chính (sidebar, header, card lớn) --- */
+html[data-theme="light"] .glass {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+/* --- .glass-soft: khung phụ nhẹ hơn --- */
+html[data-theme="light"] .glass-soft {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+/* --- .glass-card: card dự án, task, member --- */
+html[data-theme="light"] .glass-card {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.8));
+  border-color: rgba(0, 0, 0, 0.06);
+  border-top-color: rgba(0, 0, 0, 0.08);
+}
+html[data-theme="light"] .glass-card:hover {
+  border-color: rgba(236, 72, 153, 0.4);
+  box-shadow: 0 10px 34px -10px rgba(236, 72, 153, 0.25);
+}
+
+/* --- Nav item: menu sidebar --- */
+html[data-theme="light"] .nav-item {
+  color: #334155;
+}
+html[data-theme="light"] .nav-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: #0f172a;
+}
+html[data-theme="light"] .nav-item.nav-active {
+  background: linear-gradient(90deg, rgba(168, 85, 247, 0.18), rgba(236, 72, 153, 0.12));
+  border-color: rgba(236, 72, 153, 0.35);
+  color: #0f172a;
+}
+
+/* --- Border trắng mờ → viền đen mờ --- */
+html[data-theme="light"] .border-white\/\[\.03\] { border-color: rgba(0, 0, 0, 0.04); }
+html[data-theme="light"] .border-white\/\[\.04\] { border-color: rgba(0, 0, 0, 0.05); }
+html[data-theme="light"] .border-white\/\[\.05\] { border-color: rgba(0, 0, 0, 0.06); }
+html[data-theme="light"] .border-white\/\[\.06\] { border-color: rgba(0, 0, 0, 0.08); }
+html[data-theme="light"] .border-white\/\[\.08\] { border-color: rgba(0, 0, 0, 0.1); }
+html[data-theme="light"] .border-white\/10      { border-color: rgba(0, 0, 0, 0.1); }
+html[data-theme="light"] .border-white\/15      { border-color: rgba(0, 0, 0, 0.12); }
+
+/* --- Nền đen mờ (bg-black/*) → nền trắng mờ / xám nhạt --- */
+html[data-theme="light"] .bg-black\/20 { background: rgba(0, 0, 0, 0.03); }
+html[data-theme="light"] .bg-black\/30 { background: rgba(0, 0, 0, 0.05); }
+html[data-theme="light"] .bg-black\/40 { background: rgba(255, 255, 255, 0.7); }
+html[data-theme="light"] .bg-black\/50 { background: rgba(0, 0, 0, 0.08); }
+html[data-theme="light"] .bg-black\/70 { background: rgba(0, 0, 0, 0.4); }
+html[data-theme="light"] .bg-black\/75 { background: rgba(0, 0, 0, 0.5); }
+
+/* --- Nền trắng mờ (bg-white/*) → đậm hơn chút để tương phản trên nền sáng --- */
+html[data-theme="light"] .bg-white\/5       { background: rgba(0, 0, 0, 0.04); }
+html[data-theme="light"] .bg-white\/\[\.02\] { background: rgba(0, 0, 0, 0.02); }
+html[data-theme="light"] .bg-white\/\[\.03\] { background: rgba(0, 0, 0, 0.03); }
+html[data-theme="light"] .bg-white\/\[\.04\] { background: rgba(0, 0, 0, 0.04); }
+html[data-theme="light"] .bg-white\/\[\.05\] { background: rgba(0, 0, 0, 0.05); }
+html[data-theme="light"] .bg-white\/\[\.06\] { background: rgba(0, 0, 0, 0.06); }
+
+/* --- Hover state --- */
+html[data-theme="light"] .hover\:bg-white\/5:hover       { background: rgba(0, 0, 0, 0.05); }
+html[data-theme="light"] .hover\:bg-white\/10:hover      { background: rgba(0, 0, 0, 0.08); }
+html[data-theme="light"] .hover\:bg-white\/\[\.03\]:hover { background: rgba(0, 0, 0, 0.03); }
+html[data-theme="light"] .hover\:bg-white\/\[\.04\]:hover { background: rgba(0, 0, 0, 0.04); }
+html[data-theme="light"] .hover\:bg-white\/\[\.05\]:hover { background: rgba(0, 0, 0, 0.05); }
+html[data-theme="light"] .hover\:bg-white\/\[\.06\]:hover { background: rgba(0, 0, 0, 0.06); }
+/* ═══════════════════════════════════════════════════════════
+   A3 — CALENDAR (month/week/day view)
+   ═══════════════════════════════════════════════════════════ */
+
+/* --- Ô ngày trong month view --- */
+html[data-theme="light"] .cal-cell {
+  border-color: rgba(0, 0, 0, 0.06);
+}
+html[data-theme="light"] .cal-cell.drop-target {
+  background: rgba(236, 72, 153, 0.08);
+}
+
+/* --- Số ngày trong ô --- */
+html[data-theme="light"] .cal-cell span {
+  color: #334155;
+}
+
+/* --- Event card trong lịch: giữ nguyên tông màu, tăng độ tương phản --- */
+html[data-theme="light"] .event-card.tone-pink   { background: rgba(236, 72, 153, 0.18); border-color: rgba(236, 72, 153, 0.5); color: #9f1239; }
+html[data-theme="light"] .event-card.tone-cyan   { background: rgba(34, 211, 238, 0.18); border-color: rgba(34, 211, 238, 0.5); color: #155e75; }
+html[data-theme="light"] .event-card.tone-violet { background: rgba(139, 92, 246, 0.18); border-color: rgba(139, 92, 246, 0.5); color: #5b21b6; }
+html[data-theme="light"] .event-card.tone-amber  { background: rgba(245, 158, 11, 0.18); border-color: rgba(245, 158, 11, 0.5); color: #92400e; }
+
+/* --- Header các thứ (T2, T3...) --- */
+html[data-theme="light"] .grid .text-slate-500 { color: #64748b; }
+
+/* --- Cột giờ bên trái (06h, 07h...) --- */
+html[data-theme="light"] [class*="text-\\[8px\\]"].text-slate-500,
+html[data-theme="light"] [class*="text-\\[9px\\]"].text-slate-500 {
+  color: #94a3b8;
+}
+
+/* --- Đường kẻ giờ trong week/day view --- */
+html[data-theme="light"] .border-white\/\[\.03\] {
+  border-color: rgba(0, 0, 0, 0.05);
+}
+html[data-theme="light"] .border-white\/\[\.04\] {
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+/* --- Nền ô hôm nay (bg-pink-500/[.06]) --- */
+html[data-theme="light"] .bg-pink-500\/\[\.06\] { background: rgba(236, 72, 153, 0.08); }
+html[data-theme="light"] .bg-pink-500\/\[\.02\] { background: rgba(236, 72, 153, 0.04); }
+
+/* --- Thanh cuộn calendar toolbar --- */
+html[data-theme="light"] #calYearSelect {
+  background: rgba(255, 255, 255, 0.8);
+  color: #0f172a;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* --- Nút Hôm nay/prev/next --- */
+html[data-theme="light"] #calTodayBtn,
+html[data-theme="light"] #calPrevBtn,
+html[data-theme="light"] #calNextBtn {
+  background: rgba(0, 0, 0, 0.04);
+  color: #334155;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+html[data-theme="light"] #calTodayBtn:hover,
+html[data-theme="light"] #calPrevBtn:hover,
+html[data-theme="light"] #calNextBtn:hover {
+  background: rgba(0, 0, 0, 0.07);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   A4 — CHAT PANEL
+   ═══════════════════════════════════════════════════════════ */
+
+/* --- Panel chính --- */
+html[data-theme="light"] #chatPanel {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+/* --- Sidebar conversations --- */
+html[data-theme="light"] .conv-side {
+  background: rgba(248, 250, 252, 0.9);
+  border-right-color: rgba(0, 0, 0, 0.06);
+}
+
+html[data-theme="light"] .conv-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+html[data-theme="light"] .conv-item[aria-current="true"] {
+  background: linear-gradient(90deg, rgba(236, 72, 153, 0.12), rgba(139, 92, 246, 0.08));
+}
+html[data-theme="light"] .conv-name { color: #0f172a; }
+html[data-theme="light"] .conv-preview { color: #64748b; }
+html[data-theme="light"] .conv-time { color: #94a3b8; }
+html[data-theme="light"] .conv-section { color: #64748b; }
+
+/* --- Search input --- */
+html[data-theme="light"] .conv-search input {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #0f172a;
+}
+html[data-theme="light"] .conv-search input::placeholder {
+  color: #94a3b8;
+}
+html[data-theme="light"] .conv-search i { color: #94a3b8; }
+
+/* --- Tabs (Tất cả/Chưa đọc/Nhóm) --- */
+html[data-theme="light"] .conv-tab {
+  color: #64748b;
+}
+html[data-theme="light"] .conv-tab:hover {
+  background: rgba(0, 0, 0, 0.03);
+  color: #334155;
+}
+html[data-theme="light"] .conv-tab.active {
+  background: linear-gradient(90deg, rgba(236, 72, 153, 0.15), rgba(139, 92, 246, 0.12));
+  color: #0f172a;
+}
+
+/* --- Chat main --- */
+html[data-theme="light"] .chat-main {
+  background: rgba(255, 255, 255, 0.9);
+}
+html[data-theme="light"] .chat-header {
+  background: rgba(248, 250, 252, 0.85);
+  border-bottom-color: rgba(0, 0, 0, 0.06);
+}
+
+/* --- Message bubbles --- */
+html[data-theme="light"] .msg-row:not(.mine) .msg-bubble {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.06);
+  color: #0f172a;
+}
+/* mine giữ gradient hồng tím — sáng đẹp trên nền sáng */
+
+html[data-theme="light"] .msg-author { color: #7c3aed; }
+html[data-theme="light"] .msg-time { color: #94a3b8; }
+
+/* --- Input chat --- */
+html[data-theme="light"] .chat-input-wrap {
+  background: rgba(248, 250, 252, 0.9);
+  border-top-color: rgba(0, 0, 0, 0.06);
+}
+html[data-theme="light"] .chat-input-wrap textarea {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #0f172a;
+}
+html[data-theme="light"] .chat-input-wrap textarea::placeholder {
+  color: #94a3b8;
+}
+
+/* --- Member pick (modal tạo nhóm) --- */
+html[data-theme="light"] .member-pick {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.06);
+}
+html[data-theme="light"] .member-pick:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+html[data-theme="light"] .member-pick.selected {
+  background: linear-gradient(90deg, rgba(236, 72, 153, 0.1), rgba(139, 92, 246, 0.08));
+  border-color: rgba(236, 72, 153, 0.4);
+}
+html[data-theme="light"] .member-pick .check {
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+/* --- Back button mobile --- */
+html[data-theme="light"] .chat-header .back-btn {
+  color: #64748b;
+}
+html[data-theme="light"] .chat-header .back-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* --- Typing indicator --- */
+html[data-theme="light"] .typing {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.06);
+}
+html[data-theme="light"] .typing span {
+  background: #94a3b8;
+}
+/* ═══════════════════════════════════════════════════════════
+   A3b — FIX EVENT CARDS + CHỮ NHẠT
+   Calendar event dùng CAL_COLORS: bg-X-500/15, text-X-300
+   Cần override riêng các class này trên nền sáng
+   ═══════════════════════════════════════════════════════════ */
+
+/* --- Nền event card: tăng độ đậm để nổi bật --- */
+html[data-theme="light"] .bg-pink-500\/15    { background: rgba(236, 72, 153, 0.18); }
+html[data-theme="light"] .bg-cyan-500\/15    { background: rgba(6, 182, 212, 0.18); }
+html[data-theme="light"] .bg-violet-500\/15  { background: rgba(139, 92, 246, 0.18); }
+html[data-theme="light"] .bg-amber-500\/15   { background: rgba(245, 158, 11, 0.2); }
+html[data-theme="light"] .bg-emerald-500\/15 { background: rgba(16, 185, 129, 0.18); }
+
+/* --- Chữ event card: đổi từ -300 (nhạt) sang -700 (đậm) --- */
+html[data-theme="light"] .text-pink-300    { color: #9f1239; }
+html[data-theme="light"] .text-cyan-300    { color: #155e75; }
+html[data-theme="light"] .text-violet-300  { color: #5b21b6; }
+html[data-theme="light"] .text-amber-300   { color: #92400e; }
+html[data-theme="light"] .text-emerald-300 { color: #065f46; }
+
+/* --- Text-slate thấp (nhạt) → đậm hơn --- */
+html[data-theme="light"] .text-slate-500 { color: #475569; }
+html[data-theme="light"] .text-slate-600 { color: #334155; }
+html[data-theme="light"] .text-slate-700 { color: #1e293b; }
+
+/* --- Subtitle, label phụ --- */
+html[data-theme="light"] .text-\[9px\].text-slate-500,
+html[data-theme="light"] .text-\[10px\].text-slate-500,
+html[data-theme="light"] .text-\[11px\].text-slate-500 {
+  color: #64748b;
+}
+
+/* --- Mini calendar: số ngày --- */
+html[data-theme="light"] #miniGrid button {
+  color: #334155;
+}
+html[data-theme="light"] #miniGrid button:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+html[data-theme="light"] #miniGrid > div {
+  color: #64748b;
+}
+
+/* --- Checkbox list "HIỂN THỊ" --- */
+html[data-theme="light"] #calFilterList label span {
+  color: #334155;
+}
+html[data-theme="light"] #calFilterList label:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+/* --- Cột giờ (06h, 07h...) --- */
+html[data-theme="light"] [style*="height"] {
+  /* dành cho cột giờ có inline style */
+}
+
+/* --- Nền các ô lịch trong month view (chưa có event) --- */
+html[data-theme="light"] .grid > div[data-date] {
+  background: #ffffff;
+}
+html[data-theme="light"] .grid > div[data-date]:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+html[data-theme="light"] .grid > div[data-date].bg-black\/40 {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+/* --- Số ngày trong ô month view --- */
+html[data-theme="light"] .grid [data-date] span {
+  color: #334155;
+}
+html[data-theme="light"] .grid [data-date] span.text-slate-600 {
+  color: #94a3b8;
+}
+
+/* --- Nền ô "hôm nay" trong month view --- */
+html[data-theme="light"] .bg-pink-500\/\[\.06\] {
+  background: rgba(236, 72, 153, 0.1);
+}
+
+/* --- Border timeline grid --- */
+html[data-theme="light"] .border-white\/\[\.04\] { border-color: rgba(0, 0, 0, 0.06); }
+html[data-theme="light"] .border-white\/\[\.06\] { border-color: rgba(0, 0, 0, 0.08); }
+
+/* --- Slate badge: bg-slate-900/50 → sáng hơn --- */
+html[data-theme="light"] .bg-slate-900\/50 { background: rgba(100, 116, 139, 0.2); }
+html[data-theme="light"] .bg-slate-900\/40 { background: rgba(100, 116, 139, 0.15); }
+/* ═══════════════════════════════════════════════════════════
+   A5 — MODAL + FORM INPUTS + BUTTONS
+   ═══════════════════════════════════════════════════════════ */
+
+/* --- Modal backdrop: giữ tối nhưng nhạt hơn chút --- */
+html[data-theme="light"] .backdrop-blur-sm.bg-black\/70 { background: rgba(0, 0, 0, 0.5); }
+
+/* --- Modal content --- */
+html[data-theme="light"] .modal-content {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+/* --- Input / Select / Textarea trong form --- */
+html[data-theme="light"] input.bg-black\/40,
+html[data-theme="light"] select.bg-black\/40,
+html[data-theme="light"] textarea.bg-black\/40 {
+  background: rgba(255, 255, 255, 0.9);
+  color: #0f172a;
+  border-color: rgba(0, 0, 0, 0.12);
+}
+html[data-theme="light"] input::placeholder,
+html[data-theme="light"] textarea::placeholder {
+  color: #94a3b8;
+}
+
+/* --- Autofill của Chrome (nền vàng mặc định) --- */
+html[data-theme="light"] input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+  -webkit-text-fill-color: #0f172a;
+}
+
+/* --- Select dropdown --- */
+html[data-theme="light"] select option {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+/* --- Buttons hover --- */
+html[data-theme="light"] .hover\:bg-white\/10:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+html[data-theme="light"] .bg-white\/5 {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+/* --- Gradient buttons (giữ nguyên — đẹp trên cả 2 theme) --- */
+/* .bg-gradient-to-r.from-pink-600.to-violet-600 — không cần override */
+
+/* --- Border input wrapper --- */
+html[data-theme="light"] .border-white\/\[\.08\] {
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* --- Skeleton loading --- */
+html[data-theme="light"] .skel {
+  background: linear-gradient(90deg, rgba(0,0,0,0.04) 25%, rgba(0,0,0,0.08) 50%, rgba(0,0,0,0.04) 75%);
+  background-size: 200% 100%;
+  animation: skelShine 1.5s ease-in-out infinite;
+}
+
+/* --- Nút close modal (X) --- */
+html[data-theme="light"] .modal-content button.bg-white\/5 {
+  color: #64748b;
+}
+html[data-theme="light"] .modal-content button.bg-white\/5:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: #0f172a;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   A6 — SIDEBAR STORAGE + FAB + TOAST + AUTH + MISC
+   ═══════════════════════════════════════════════════════════ */
+
+/* --- Storage bar trong sidebar --- */
+html[data-theme="light"] #sidebar .glass-soft {
+  background: rgba(0, 0, 0, 0.03);
+}
+html[data-theme="light"] #storageBar {
+  background: linear-gradient(90deg, #06b6d4, #ec4899);
+}
+html[data-theme="light"] #sidebar .bg-black\/50 {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* --- User profile footer (sidebar bottom) --- */
+html[data-theme="light"] #sidebar .bg-black\/20 {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+/* --- FAB chat button (gradient — giữ) --- */
+/* Giữ nguyên vì gradient hồng/tím đẹp trên cả 2 theme */
+
+/* --- Toast notifications --- */
+html[data-theme="light"] .toast {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 12px 40px -10px rgba(0, 0, 0, 0.15);
+}
+html[data-theme="light"] .toast p {
+  color: #0f172a;
+}
+
+/* --- Auth page (nếu user logout, đăng nhập lại) --- */
+html[data-theme="light"] #authPage {
+  background: #f8fafc;
+}
+html[data-theme="light"] .auth-form-side {
+  background: #f8fafc;
+}
+html[data-theme="light"] .auth-branding-side {
+  background: linear-gradient(135deg, #ede9fe 0%, #fce7f3 100%);
+}
+html[data-theme="light"] .auth-headline {
+  color: #0f172a;
+}
+html[data-theme="light"] .auth-subtext {
+  color: #64748b;
+}
+html[data-theme="light"] .auth-feature-title {
+  color: #0f172a;
+}
+html[data-theme="light"] .auth-feature-desc {
+  color: #64748b;
+}
+html[data-theme="light"] .auth-input-wrap input {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #0f172a;
+}
+
+/* --- Pending / Rejected page --- */
+html[data-theme="light"] #pendingPage,
+html[data-theme="light"] #rejectedPage {
+  background: #f8fafc;
+}
+html[data-theme="light"] #pendingPage h2,
+html[data-theme="light"] #rejectedPage h2 {
+  color: #0f172a;
+}
+
+/* --- Admin user rows --- */
+html[data-theme="light"] .admin-user-row {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(0, 0, 0, 0.06);
+}
+html[data-theme="light"] .admin-user-row:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+/* --- Filter chips admin --- */
+html[data-theme="light"] .admin-filter-chip {
+  background: rgba(0, 0, 0, 0.03);
+  color: #64748b;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+html[data-theme="light"] .admin-filter-chip.active {
+  background: linear-gradient(90deg, rgba(236,72,153,0.15), rgba(139,92,246,0.12));
+  color: #0f172a;
+  border-color: rgba(236, 72, 153, 0.35);
+}
+
+/* --- Upload panel --- */
+html[data-theme="light"] .upload-row {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(6, 182, 212, 0.4);
+}
+html[data-theme="light"] .upload-bar-track {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* --- Calendar legend (dưới calendar) --- */
+html[data-theme="light"] #calLegendStrip {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+/* --- Scrollbar --- */
+html[data-theme="light"] .scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+}
+html[data-theme="light"] .scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* --- Tag "BẠN", "ADMIN CLB", "TRƯỞNG" (giữ màu nhưng đậm hơn) --- */
+html[data-theme="light"] .bg-pink-500\/15  { background: rgba(236, 72, 153, 0.15); }
+html[data-theme="light"] .bg-amber-500\/15 { background: rgba(245, 158, 11, 0.18); }
+html[data-theme="light"] .bg-violet-500\/15 { background: rgba(139, 92, 246, 0.15); }
+
+/* --- Border các tag --- */
+html[data-theme="light"] .border-pink-500\/30   { border-color: rgba(236, 72, 153, 0.4); }
+html[data-theme="light"] .border-amber-500\/30  { border-color: rgba(245, 158, 11, 0.4); }
+html[data-theme="light"] .border-violet-500\/30 { border-color: rgba(139, 92, 246, 0.4); }
+
+/* --- Text colored trong tag --- */
+html[data-theme="light"] .text-cyan-400  { color: #0891b2; }
+html[data-theme="light"] .text-pink-400  { color: #db2777; }
+html[data-theme="light"] .text-violet-400 { color: #7c3aed; }
+html[data-theme="light"] .text-amber-400 { color: #d97706; }
+html[data-theme="light"] .text-emerald-400 { color: #059669; }
+html[data-theme="light"] .text-rose-300  { color: #be123c; }
+html[data-theme="light"] .text-rose-400  { color: #e11d48; }
+
+/* --- Divider (divide-white) --- */
+html[data-theme="light"] .divide-white\/\[\.04\] > * + * {
+  border-color: rgba(0, 0, 0, 0.06);
+}
+/* ═══════════════════════════════════════════════════════════
+   S2 — SETTINGS MODAL (light theme)
+   ═══════════════════════════════════════════════════════════ */
+
+/* --- Modal content nền trắng --- */
+html[data-theme="light"] #settingsModal .modal-content {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+/* --- Section: icon box nền nhạt --- */
+html[data-theme="light"] #settingsModal .bg-white\/\[\.04\] {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+/* --- Segmented control (Sáng/Tối) --- */
+html[data-theme="light"] #settingsModal .bg-white\/\[\.03\] {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+html[data-theme="light"] #settingsModal [data-seg-value] {
+  color: #64748b;
+}
+html[data-theme="light"] #settingsModal [data-seg-value]:hover {
+  color: #0f172a;
+  background: rgba(0, 0, 0, 0.05);
+}
+/* Nút đang active giữ gradient hồng-tím — đẹp trên cả 2 theme */
+
+/* --- Info row + Settings row --- */
+html[data-theme="light"] #settingsModal .bg-white\/\[\.02\] {
+  background: rgba(0, 0, 0, 0.02);
+}
+html[data-theme="light"] #settingsModal .bg-white\/\[\.02\]:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+/* --- Text trong Settings --- */
+html[data-theme="light"] #settingsModal .text-slate-400 {
+  color: #64748b;
+}
+html[data-theme="light"] #settingsModal .text-slate-500 {
+  color: #64748b;
+}
+
+/* --- Icon arrow phải (→) --- */
+html[data-theme="light"] #settingsModal .text-slate-500 i {
+  color: #94a3b8;
+}
+
+/* --- Nút Đăng xuất (nền đỏ nhạt) --- */
+html[data-theme="light"] #settingsModal .bg-rose-500\/10 {
+  background: rgba(244, 63, 94, 0.12);
+}
+html[data-theme="light"] #settingsModal .bg-rose-500\/10:hover {
+  background: rgba(244, 63, 94, 0.2);
+}
+html[data-theme="light"] #settingsModal .border-rose-500\/30 {
+  border-color: rgba(244, 63, 94, 0.4);
+}
+html[data-theme="light"] #settingsModal .text-rose-300 {
+  color: #be123c;
+}
+
+/* --- Nút "Đóng" footer --- */
+html[data-theme="light"] #settingsModal .bg-white\/5 {
+  background: rgba(0, 0, 0, 0.04);
+}
+html[data-theme="light"] #settingsModal .bg-white\/5:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* --- Nút close (X) --- */
+html[data-theme="light"] #settingsModal button.bg-white\/5 {
+  color: #64748b;
+}
+html[data-theme="light"] #settingsModal button.bg-white\/5:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: #0f172a;
+}
+
+/* --- Header modal: tiêu đề "Cài đặt" --- */
+html[data-theme="light"] #settingsModal h2 {
+  color: #0f172a;
+}
+
+/* --- Border trong footer --- */
+html[data-theme="light"] #settingsModal .bg-black\/20 {
+  background: rgba(0, 0, 0, 0.02);
+}
+html[data-theme="light"] #settingsModal .border-white\/\[\.06\] {
+  border-color: rgba(0, 0, 0, 0.08);
+}

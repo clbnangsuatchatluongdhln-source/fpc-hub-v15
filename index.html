@@ -1,13 +1,304 @@
 <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fpc-hub-v15</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+<html lang="vi" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#030014">
+<title>FPC HUB · Timeline Workspace v15</title>
+
+<!-- Google Fonts & Icons -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" media="print" onload="this.media='all'">
+
+<!-- CSS (Vite sẽ tự động load nếu bạn import trong main.ts, nhưng để đây cũng được nếu file nằm trong public/) -->
+<link rel="stylesheet" href="/css/tailwind-built.css?v=2">
+<link rel="stylesheet" href="/css/style.css?v=2">
+<link rel="stylesheet" href="/css/theme-light.css?v=2">
+</head>
+
+<body>
+<div class="bg-subtle"></div>
+<div id="toastRegion" class="fixed top-5 right-5 z-[200] flex flex-col gap-2.5 w-[min(92vw,380px)]" aria-live="polite"></div>
+
+<!-- AUTH PAGE -->
+<div id="authPage" class="hidden fixed inset-0 z-[150] bg-[#05030a]">
+  <div class="auth-split">
+    <div class="auth-form-side">
+      <div class="auth-form-wrap">
+        <div class="flex items-center gap-3 mb-10">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-pink-500 via-violet-500 to-cyan-400 flex items-center justify-center shadow-neon-pink"><i class="fa-solid fa-cube text-white"></i></div>
+          <div><div class="font-black tracking-widest grad text-xl leading-none">FPC HUB</div><div class="text-[10px] text-slate-500 font-bold tracking-[.25em] mt-1">COMMAND OS</div></div>
+        </div>
+        <div class="auth-tabs mb-8">
+          <button id="authTabLogin" class="auth-tab active" data-auth-tab="login">Đăng nhập</button>
+          <button id="authTabRegister" class="auth-tab" data-auth-tab="register">Đăng ký</button>
+        </div>
+        <form id="authLoginForm" class="auth-form">
+          <div class="auth-field">
+            <label for="authLoginEmail">Email</label>
+            <div class="auth-input-wrap"><i class="fa-regular fa-envelope"></i><input id="authLoginEmail" type="email" autocomplete="email" placeholder="email@example.com" required></div>
+          </div>
+          <div class="auth-field">
+            <label for="authLoginPassword">Mật khẩu</label>
+            <div class="auth-input-wrap"><i class="fa-solid fa-lock"></i><input id="authLoginPassword" type="password" autocomplete="current-password" placeholder="••••••••" required><button type="button" class="auth-eye" data-toggle-pw="authLoginPassword" aria-label="Hiện mật khẩu"><i class="fa-regular fa-eye"></i></button></div>
+          </div>
+          <div class="flex justify-between items-center mt-2 mb-6">
+            <label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer"><input type="checkbox" id="authRememberMe" class="auth-checkbox" checked><span>Ghi nhớ đăng nhập</span></label>
+            <button type="button" id="authForgotBtn" class="text-xs text-pink-400 hover:text-pink-300 font-bold">Quên mật khẩu?</button>
+          </div>
+          <button type="submit" id="authLoginBtn" class="auth-submit"><span>Đăng nhập</span><i class="fa-solid fa-arrow-right text-xs"></i></button>
+        </form>
+        <form id="authRegisterForm" class="auth-form hidden">
+          <div class="auth-field">
+            <label for="authRegName">Tên hiển thị</label>
+            <div class="auth-input-wrap"><i class="fa-regular fa-user"></i><input id="authRegName" type="text" autocomplete="name" placeholder="Nguyễn Văn A" maxlength="60" required></div>
+          </div>
+          <div class="auth-field">
+            <label for="authRegEmail">Email</label>
+            <div class="auth-input-wrap"><i class="fa-regular fa-envelope"></i><input id="authRegEmail" type="email" autocomplete="email" placeholder="email@example.com" required></div>
+          </div>
+          <div class="auth-field">
+            <label for="authRegPassword">Mật khẩu</label>
+            <div class="auth-input-wrap"><i class="fa-solid fa-lock"></i><input id="authRegPassword" type="password" autocomplete="new-password" placeholder="Tối thiểu 6 ký tự" minlength="6" required><button type="button" class="auth-eye" data-toggle-pw="authRegPassword" aria-label="Hiện mật khẩu"><i class="fa-regular fa-eye"></i></button></div>
+          </div>
+          <div class="auth-field">
+            <label for="authRegConfirm">Xác nhận mật khẩu</label>
+            <div class="auth-input-wrap"><i class="fa-solid fa-lock"></i><input id="authRegConfirm" type="password" autocomplete="new-password" placeholder="Nhập lại mật khẩu" minlength="6" required></div>
+          </div>
+          <div class="auth-field">
+            <label for="authRegCode">Mã mời (nếu có)</label>
+            <div class="auth-input-wrap"><i class="fa-solid fa-ticket"></i><input id="authRegCode" type="text" placeholder="Để trống nếu đăng ký mới" maxlength="20"></div>
+          </div>
+          <button type="submit" id="authRegisterBtn" class="auth-submit mt-6"><span>Đăng ký tài khoản</span><i class="fa-solid fa-arrow-right text-xs"></i></button>
+        </form>
+        <div id="authMessage" class="hidden mt-5 p-3.5 rounded-xl text-sm font-semibold"></div>
+        <p class="text-[11px] text-slate-600 mt-8 text-center leading-relaxed">Bằng việc đăng nhập, bạn đồng ý với<br><a href="#" class="text-slate-400 hover:text-pink-400">Điều khoản sử dụng</a> của FPC HUB</p>
+      </div>
+    </div>
+    <div class="auth-branding-side">
+      <div class="auth-glow-1"></div>
+      <div class="auth-glow-2"></div>
+      <div class="auth-branding-content">
+        <div class="auth-branding-badge"><span class="auth-dot"></span><span>Hệ thống đang hoạt động</span></div>
+        <h1 class="auth-headline">Nền tảng<br><span class="grad">quản trị dự án</span><br>cho team sáng tạo.</h1>
+        <p class="auth-subtext">Timeline, File Hub, Chat riêng tư và nhiều hơn nữa. Tất cả trong một không gian duy nhất.</p>
+        <div class="auth-feature-list">
+          <div class="auth-feature"><div class="auth-feature-icon"><i class="fa-solid fa-calendar-days"></i></div><div><div class="auth-feature-title">Timeline trực quan</div><div class="auth-feature-desc">Kéo thả file vào ô dự án</div></div></div>
+          <div class="auth-feature"><div class="auth-feature-icon"><i class="fa-solid fa-cloud"></i></div><div><div class="auth-feature-title">Đồng bộ cloud</div><div class="auth-feature-desc">Mọi thiết bị, mọi lúc</div></div></div>
+          <div class="auth-feature"><div class="auth-feature-icon"><i class="fa-solid fa-shield-halved"></i></div><div><div class="auth-feature-title">Bảo mật cấp cao</div><div class="auth-feature-desc">RLS + mã hóa end-to-end</div></div></div>
+        </div>
+        <div class="auth-footer-version">v15.0 · Cosmic Dark Aurora</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PENDING PAGE -->
+<div id="pendingPage" class="hidden fixed inset-0 z-[150] bg-[#05030a] items-center justify-center p-4">
+  <div class="max-w-md w-full text-center">
+    <div class="w-20 h-20 rounded-full bg-amber-500/15 border border-amber-500/30 flex items-center justify-center mx-auto mb-6"><i class="fa-solid fa-hourglass-half text-3xl text-amber-400"></i></div>
+    <h2 class="text-2xl font-black text-white mb-3">Đang chờ duyệt</h2>
+    <p class="text-slate-400 text-sm leading-relaxed mb-6">Tài khoản của bạn đã được tạo thành công.<br>Vui lòng chờ Admin CLB phê duyệt để bắt đầu sử dụng.</p>
+    <div class="p-4 rounded-xl glass-soft mb-6"><p class="text-xs text-slate-500 mb-2">Email đăng ký:</p><p id="pendingEmail" class="text-sm font-bold text-pink-300 break-all">—</p></div>
+    <button id="pendingLogoutBtn" class="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-bold text-slate-300 transition"><i class="fa-solid fa-right-from-bracket mr-1.5"></i>Đăng xuất</button>
+  </div>
+</div>
+
+<!-- REJECTED PAGE -->
+<div id="rejectedPage" class="hidden fixed inset-0 z-[150] bg-[#05030a] items-center justify-center p-4">
+  <div class="max-w-md w-full text-center">
+    <div class="w-20 h-20 rounded-full bg-rose-500/15 border border-rose-500/30 flex items-center justify-center mx-auto mb-6"><i class="fa-solid fa-circle-xmark text-3xl text-rose-400"></i></div>
+    <h2 class="text-2xl font-black text-white mb-3">Tài khoản bị từ chối</h2>
+    <p class="text-slate-400 text-sm leading-relaxed mb-6">Yêu cầu đăng ký của bạn đã bị từ chối.<br>Vui lòng liên hệ Admin CLB để biết thêm chi tiết.</p>
+    <button id="rejectedLogoutBtn" class="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-bold text-slate-300 transition"><i class="fa-solid fa-right-from-bracket mr-1.5"></i>Đăng xuất</button>
+  </div>
+</div>
+
+<!-- MAIN APP (Ẩn mặc định, sẽ hiện sau khi đăng nhập) -->
+<div class="relative z-10 flex h-dvh overflow-hidden hidden" id="mainAppContainer">
+  <div id="mobileOverlay" class="hidden fixed inset-0 z-30 bg-black/75 md:hidden" data-action="close-sidebar"></div>
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="fixed md:relative z-40 inset-y-0 left-0 w-64 shrink-0 glass border-r border-white/[.06] -translate-x-full md:translate-x-0 transition-transform duration-300 flex flex-col" aria-label="Điều hướng">
+    <div class="h-16 flex items-center px-5 gap-3 border-b border-white/[.06]">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-500 via-violet-500 to-cyan-400 flex items-center justify-center shadow-neon-pink"><i class="fa-solid fa-cube text-white text-sm"></i></div>
+      <div class="flex-1 min-w-0"><div class="font-black tracking-widest grad text-sm leading-none">FPC HUB</div><div class="text-[9px] text-slate-500 font-bold tracking-[.2em] mt-1">TIMELINE · V15</div></div>
+      <button data-action="close-sidebar" class="md:hidden w-8 h-8 rounded-lg hover:bg-white/10 text-slate-400 flex items-center justify-center" aria-label="Đóng"><i class="fa-solid fa-xmark text-sm"></i></button>
+    </div>
+
+    <nav class="p-3 space-y-4 mt-1 overflow-y-auto scrollbar flex-1 min-h-0" aria-label="Mục chính">
+      <div>
+        <div class="px-3 pb-2 text-[9px] font-black text-slate-600 tracking-[.2em] uppercase">Nghiệp vụ</div>
+        <div class="space-y-1">
+          <button data-nav="timeline" class="nav-item nav-active w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent text-sm font-semibold text-left">
+            <i class="fa-solid fa-calendar-days w-5 text-center text-pink-400"></i><span>Lịch</span>
+          </button>
+          <button data-nav="projects" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent text-sm font-semibold text-left text-slate-400 hover:text-white hover:bg-white/5">
+            <i class="fa-solid fa-layer-group w-5 text-center text-violet-400"></i><span>Dự án</span>
+          </button>
+          <button data-nav="departments" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent text-sm font-semibold text-left text-slate-400 hover:text-white hover:bg-white/5">
+            <i class="fa-solid fa-building-user w-5 text-center text-cyan-400"></i><span>Tổ chức</span>
+          </button>
+          <button data-nav="admin" id="navAdminBtn" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent text-sm font-semibold text-left text-slate-400 hover:text-white hover:bg-white/5 hidden">
+            <i class="fa-solid fa-shield-halved w-5 text-center text-amber-400"></i><span>Quản trị</span>
+            <span id="adminPendingBadge" class="hidden text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500 text-black font-black">0</span>
+          </button>
+        </div>
+      </div>
+      <div>
+        <div class="px-3 pb-2 text-[9px] font-black text-slate-600 tracking-[.2em] uppercase">Tiện ích</div>
+        <div class="space-y-1">
+          <button data-action="toggle-chat" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent text-sm font-semibold text-left text-slate-400 hover:text-white hover:bg-white/5">
+            <i class="fa-solid fa-comments w-5 text-center text-emerald-400"></i><span>Tin nhắn</span>
+          </button>
+          <button data-action="open-resource-hub" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent text-sm font-semibold text-left text-slate-400 hover:text-white hover:bg-white/5">
+            <i class="fa-solid fa-folder-open w-5 text-center text-orange-400"></i><span>Kho tài nguyên</span>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <div class="p-3 border-t border-white/[.06] bg-black/20 shrink-0">
+      <div class="flex items-center gap-2">
+        <div class="relative shrink-0">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-violet-600 to-pink-600 flex items-center justify-center font-black text-white text-sm">B</div>
+          <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-void-950"></span>
+        </div>
+        <div class="min-w-0 flex-1"><div class="text-sm font-bold truncate" id="sidebarUserName">Bạn</div><div class="text-[9px] tracking-widest text-pink-400 font-black" id="sidebarUserRole">SUPER ADMIN</div></div>
+        <button class="w-8 h-8 rounded-lg hover:bg-white/5 text-slate-400 flex items-center justify-center shrink-0" data-action="open-settings" aria-label="Cài đặt" title="Cài đặt"><i class="fa-solid fa-gear text-xs"></i></button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="min-w-0 flex-1 flex flex-col h-dvh">
+    <header class="h-16 glass border-b border-white/[.06] px-3 md:px-6 flex items-center justify-between gap-2 md:gap-3 shrink-0 z-20">
+      <div class="flex items-center gap-2 md:gap-3 min-w-0">
+        <button data-action="open-sidebar" class="md:hidden w-9 h-9 rounded-lg hover:bg-white/5 text-slate-300 flex items-center justify-center shrink-0" aria-label="Mở menu"><i class="fa-solid fa-bars"></i></button>
+        <div class="min-w-0">
+          <h1 id="pageTitle" class="font-black tracking-wide text-white truncate text-base md:text-lg">Lịch</h1>
+          <div class="flex items-center gap-2 text-[10px] text-slate-500">
+            <span id="clock" class="tabular-nums text-slate-300 font-semibold">--:--:--</span><span class="text-slate-700">·</span><span id="dateLabel">--/--/----</span>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <button data-action="open-create" class="bg-gradient-to-r from-pink-600 to-violet-600 hover:opacity-95 text-white px-3 md:px-4 py-2 rounded-full text-sm font-bold shadow-neon-pink transition-transform active:scale-[0.97] flex items-center gap-2" title="Tạo sự kiện hoặc dự án">
+          <i class="fa-solid fa-plus text-xs"></i><span class="hidden sm:inline">Tạo mới</span>
+        </button>
+      </div>
+    </header>
+
+    <div id="mainScroll" class="flex-1 overflow-y-auto scrollbar">
+      <div class="p-3 md:p-5 max-w-[1600px] mx-auto space-y-4">
+        
+        <!-- SECTION: TIMELINE -->
+        <section id="timelineSection">
+          <div class="glass-soft rounded-2xl overflow-hidden">
+            <div class="overflow-x-auto scrollbar"><div id="timelineGrid" class="min-w-[900px]"></div></div>
+          </div>
+        </section>
+
+        <!-- SECTION: PROJECTS -->
+        <section id="projectsSection" class="hidden space-y-4">
+          <div class="flex items-center justify-between gap-3 flex-wrap">
+            <h2 class="text-lg font-black text-white flex items-center gap-2"><i class="fa-solid fa-layer-group text-violet-400"></i> Dự án</h2>
+            <div class="relative w-full sm:w-72">
+              <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs pointer-events-none"></i>
+              <input id="searchInput" type="text" placeholder="Tìm dự án..." class="w-full bg-black/30 border border-white/[.08] rounded-xl pl-10 pr-3 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-pink-500/50 transition" aria-label="Tìm dự án">
+            </div>
+          </div>
+          <div id="projectList" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+        </section>
+
+        <!-- SECTION: ADMIN -->
+        <section id="adminSection" class="hidden space-y-4">
+          <div class="flex items-center justify-between gap-3 flex-wrap">
+            <div>
+              <h2 class="text-lg font-black text-white flex items-center gap-2"><i class="fa-solid fa-shield-halved text-amber-400"></i> Quản trị người dùng</h2>
+              <p class="text-xs text-slate-500 mt-1">Duyệt, phân quyền và quản lý thành viên FPC HUB</p>
+            </div>
+            <button data-action="refresh-users" class="text-xs font-bold text-slate-400 hover:text-white transition flex items-center gap-1.5"><i class="fa-solid fa-rotate"></i> Làm mới</button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="glass-card rounded-2xl p-3.5 flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-amber-500/15 text-amber-300 flex items-center justify-center shrink-0"><i class="fa-solid fa-hourglass-half text-sm"></i></div>
+              <div><div class="text-[10px] uppercase tracking-widest text-slate-500 font-black">Chờ duyệt</div><div id="statPending" class="text-lg font-black text-white tabular-nums leading-none mt-0.5">0</div></div>
+            </div>
+            <div class="glass-card rounded-2xl p-3.5 flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-300 flex items-center justify-center shrink-0"><i class="fa-solid fa-circle-check text-sm"></i></div>
+              <div><div class="text-[10px] uppercase tracking-widest text-slate-500 font-black">Hoạt động</div><div id="statActive" class="text-lg font-black text-white tabular-nums leading-none mt-0.5">0</div></div>
+            </div>
+            <div class="glass-card rounded-2xl p-3.5 flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-rose-500/15 text-rose-300 flex items-center justify-center shrink-0"><i class="fa-solid fa-circle-xmark text-sm"></i></div>
+              <div><div class="text-[10px] uppercase tracking-widest text-slate-500 font-black">Bị từ chối</div><div id="statRejected" class="text-lg font-black text-white tabular-nums leading-none mt-0.5">0</div></div>
+            </div>
+          </div>
+          <div class="glass-soft rounded-2xl p-3 flex flex-wrap gap-2">
+            <button data-admin-filter="all" class="admin-filter-chip active">Tất cả</button>
+            <button data-admin-filter="pending" class="admin-filter-chip">Chờ duyệt</button>
+            <button data-admin-filter="active" class="admin-filter-chip">Hoạt động</button>
+            <button data-admin-filter="rejected" class="admin-filter-chip">Bị từ chối</button>
+          </div>
+          <div id="adminUserList" class="space-y-2"></div>
+          <div id="adminEmpty" class="hidden glass-soft rounded-2xl p-12 text-center">
+            <i class="fa-solid fa-users-slash text-3xl text-slate-700 mb-3 block"></i>
+            <p class="text-slate-400 font-bold">Không có user nào</p>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- CHAT FAB & PANEL -->
+<button data-action="toggle-chat" class="fixed right-5 bottom-5 z-[75] w-14 h-14 rounded-full bg-gradient-to-br from-pink-500 via-violet-500 to-cyan-500 text-white shadow-neon-pink border border-white/25 flex items-center justify-center text-xl hover:scale-[1.06] active:scale-95 transition-transform" aria-label="Chat"><i class="fa-solid fa-comment-dots"></i></button>
+
+<section id="chatPanel" data-open="false" data-mobile-view="list" class="glass shadow-2xl border border-white/[.08]" role="dialog" aria-modal="true" aria-labelledby="chatTitle">
+  <aside class="conv-side">
+    <div class="flex items-center gap-3 px-4 pt-3.5 pb-3 border-b border-white/[.06]">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-500 to-violet-600 flex items-center justify-center shadow-neon-pink shrink-0"><i class="fa-solid fa-comments text-white text-sm"></i></div>
+      <div class="flex-1 min-w-0"><h2 id="chatTitle" class="font-black text-sm text-white leading-tight">Tin nhắn</h2><p class="text-[10px] text-emerald-400 font-bold tracking-wider mt-0.5"><span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1"></span>REALTIME</p></div>
+      <button data-action="toggle-chat" class="w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition flex items-center justify-center" aria-label="Đóng"><i class="fa-solid fa-xmark text-sm"></i></button>
+    </div>
+    <div class="conv-search"><i class="fa-solid fa-magnifying-glass"></i><input id="convSearch" type="text" placeholder="Tìm cuộc trò chuyện..." autocomplete="off" aria-label="Tìm cuộc trò chuyện"></div>
+    <div class="conv-tabs" role="tablist">
+      <button class="conv-tab active" data-conv-tab="all" role="tab">Tất cả</button>
+      <button class="conv-tab" data-conv-tab="unread" role="tab">Chưa đọc</button>
+      <button class="conv-tab" data-conv-tab="group" role="tab">Nhóm</button>
+    </div>
+    <div id="convList" class="flex-1 overflow-y-auto scrollbar py-2 min-h-0"></div>
+  </aside>
+  <div class="chat-main">
+    <header class="chat-header">
+      <button class="back-btn" data-action="chat-back" aria-label="Quay lại"><i class="fa-solid fa-arrow-left text-sm"></i></button>
+      <div id="chatHeaderContent" class="flex-1 min-w-0 flex items-center gap-3"></div>
+      <div class="flex items-center gap-1 shrink-0">
+        <button data-action="toggle-chat" class="w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition flex items-center justify-center md:hidden" aria-label="Đóng chat"><i class="fa-solid fa-xmark text-sm"></i></button>
+      </div>
+    </header>
+    <div id="messageList" class="msg-scroll scrollbar" aria-live="polite" aria-relevant="additions"></div>
+    <form id="messageForm" class="chat-input-wrap">
+      <button type="button" class="w-9 h-9 rounded-full text-slate-400 hover:text-pink-400 hover:bg-white/5 flex items-center justify-center shrink-0 transition" aria-label="Đính kèm"><i class="fa-solid fa-paperclip text-sm"></i></button>
+      <label class="sr-only" for="messageInput">Tin nhắn</label>
+      <textarea id="messageInput" rows="1" placeholder="Nhập tin nhắn..." maxlength="2000" autocomplete="off"></textarea>
+      <button type="submit" class="send-btn" aria-label="Gửi"><i class="fa-solid fa-arrow-up text-sm"></i></button>
+    </form>
+  </div>
+</section>
+
+<div id="modalRoot"></div>
+<input type="file" id="globalFilePicker" multiple class="hidden" aria-hidden="true">
+
+<!-- External libs -->
+<script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js" defer></script>
+
+<!-- Vite Entry Point -->
+<script type="module" src="/src/main.ts"></script>
+</body>
 </html>
