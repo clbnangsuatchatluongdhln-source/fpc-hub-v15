@@ -125,7 +125,9 @@
   <!-- SIDEBAR -->
   <aside id="sidebar" class="fixed md:relative z-40 inset-y-0 left-0 w-64 shrink-0 glass border-r border-white/[.06] -translate-x-full md:translate-x-0 transition-transform duration-300 flex flex-col" aria-label="Điều hướng">
     <div class="h-16 flex items-center px-5 gap-3 border-b border-white/[.06]">
-      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-500 via-violet-500 to-cyan-400 flex items-center justify-center shadow-neon-pink"><i class="fa-solid fa-cube text-white text-sm"></i></div>
+      <!-- LOGO CLB: Sẽ được JS tự động render nếu có logo_url -->
+      <div data-avatar="club" class="shrink-0"></div>
+      
       <div class="flex-1 min-w-0"><div class="font-black tracking-widest grad text-sm leading-none">FPC HUB</div><div class="text-[9px] text-slate-500 font-bold tracking-[.2em] mt-1">TIMELINE · V15</div></div>
       <button data-action="close-sidebar" class="md:hidden w-8 h-8 rounded-lg hover:bg-white/10 text-slate-400 flex items-center justify-center" aria-label="Đóng"><i class="fa-solid fa-xmark text-sm"></i></button>
     </div>
@@ -165,7 +167,8 @@
     <div class="p-3 border-t border-white/[.06] bg-black/20 shrink-0">
       <div class="flex items-center gap-2">
         <div class="relative shrink-0">
-          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-violet-600 to-pink-600 flex items-center justify-center font-black text-white text-sm">B</div>
+          <!-- AVATAR USER: Sẽ được JS tự động render -->
+          <div data-avatar="user"></div>
           <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-void-950"></span>
         </div>
         <div class="min-w-0 flex-1"><div class="text-sm font-bold truncate" id="sidebarUserName">Bạn</div><div class="text-[9px] tracking-widest text-pink-400 font-black" id="sidebarUserRole">SUPER ADMIN</div></div>

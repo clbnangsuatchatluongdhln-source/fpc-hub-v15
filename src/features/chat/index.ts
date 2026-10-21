@@ -1,7 +1,6 @@
 /* ============================================================
    FPC LAB · src/features/chat/index.ts
    Public API + Orchestration layer cho Chat Module.
-   Quản lý state module-scoped, gọi service & UI.
    ============================================================ */
 
 import { Auth } from '../../core/auth';
@@ -29,6 +28,7 @@ import {
   unsubscribeRealtime,
   updateMessageStatus,
 } from './chat-service';
+import { openGroupSettings } from './group-settings'; // Import tính năng mới
 import type {
   ChatState,
   ChatUIHandlers,
@@ -69,7 +69,6 @@ function isChatOpen(): boolean {
   return panel?.dataset.open === 'true';
 }
 
-/** Apply filter search + tab lên danh sách conversation. */
 function filteredConversations(): Conversation[] {
   let list = state.conversations.slice();
   const q = state.convSearch.toLowerCase().trim();
@@ -91,7 +90,6 @@ function filteredConversations(): Conversation[] {
   return list;
 }
 
-/** Re-render toàn bộ UI từ state hiện tại. */
 function renderAll(): void {
   renderConvList(filteredConversations(), state.activeConvId, state.users, getMyId());
   renderChatHeader(findConv(state.activeConvId), state.users, getMyId());
@@ -103,7 +101,6 @@ function renderAll(): void {
   updateTotalUnread(state.conversations);
 }
 
-/** Cập nhật tab active styling trên DOM. */
 function syncTabUI(): void {
   document.querySelectorAll<HTMLElement>('.conv-tab').forEach((tab) => {
     const value = tab.getAttribute('data-conv-tab');
@@ -124,7 +121,6 @@ async function openConversation(convId: string): Promise<void> {
     c.id === convId ? { ...c, unread: 0 } : c
   );
 
-  /* Panel open + mobile view */
   const panel = $('#chatPanel');
   if (panel) {
     panel.dataset.open = 'true';
@@ -134,7 +130,6 @@ async function openConversation(convId: string): Promise<void> {
 
   renderAll();
 
-  /* Nếu chưa có messages → fetch từ Supabase. */
   if (!state.messagesByConv[convId]) {
     const msgs = await fetchMessages(convId);
     state.messagesByConv[convId] = msgs;
@@ -151,14 +146,10 @@ async function handleSendMessage(text: string): Promise<void> {
   const convId = state.activeConvId;
   const msg = await sendMessage(convId, text);
   if (!msg) {
-    Toast.show('⚠️ Không lưu được tin nhắn lên cloud', {
-      type: 'warn',
-      timeout: 3000,
-    });
+    Toast.show('⚠️ Không lưu được tin nhắn lên cloud', { type: 'warn', timeout: 3000 });
     return;
   }
 
-  /* Optimistic: chèn ngay vào state. Realtime INSERT sẽ bị dedupe. */
   if (!state.messagesByConv[convId]) state.messagesByConv[convId] = [];
   if (!state.messagesByConv[convId]!.some((m) => m.id === msg.id)) {
     state.messagesByConv[convId]!.push(msg);
@@ -178,7 +169,6 @@ function handleRealtimeMessage(msg: Message): void {
   const myId = getMyId();
   const isMine = msg.senderId === myId;
 
-  /* De-dupe: tin của chính mình đã được optimistic insert. */
   if (isMine) {
     const arr = state.messagesByConv[convId] ?? [];
     if (arr.some((m) => m.id === msg.id)) return;
@@ -250,6 +240,7 @@ function handleRealtimeConversation(
         ? {
             ...c,
             name: conv.name ?? c.name,
+            avatar_url: conv.avatar_url ?? c.avatar_url, // Cập nhật realtime avatar
             pinned: conv.pinned,
             muted: conv.muted,
             lastMessageAt: conv.lastMessageAt || c.lastMessageAt,
@@ -258,6 +249,7 @@ function handleRealtimeConversation(
     );
   }
   renderConvList(filteredConversations(), state.activeConvId, state.users, getMyId());
+  renderChatHeader(findConv(state.activeConvId), state.users, getMyId());
 }
 
 /* ============================================================
@@ -270,7 +262,6 @@ export function openChat(): void {
   panel.dataset.open = 'true';
   panel.classList.remove('hidden');
 
-  /* Nếu chưa có active conv → chọn conv đầu tiên. */
   if (!state.activeConvId && state.conversations.length > 0) {
     void openConversation(state.conversations[0]!.id);
   } else if (state.activeConvId) {
@@ -308,11 +299,9 @@ export async function openDMWithUser(userId: string): Promise<void> {
 }
 
 async function handleCreateGroup(): Promise<void> {
-  /* Tối giản: dùng prompt tạm. Full modal sẽ port ở task riêng. */
   const name = window.prompt('Tên nhóm:');
   if (!name) return;
 
-  /* Placeholder members: 2 user đầu tiên khác mình (nếu có). */
   const candidates = state.users
     .filter((u) => u.id !== getMyId())
     .slice(0, 2)
@@ -339,10 +328,7 @@ async function handleTogglePin(convId: string): Promise<void> {
     c.id === convId ? { ...c, pinned } : c
   );
   renderConvList(filteredConversations(), state.activeConvId, state.users, getMyId());
-  Toast.show(pinned ? 'Đã ghim cuộc trò chuyện' : 'Đã bỏ ghim', {
-    type: 'success',
-    timeout: 2000,
-  });
+  Toast.show(pinned ? 'Đã ghim cuộc trò chuyện' : 'Đã bỏ ghim', { type: 'success', timeout: 2000 });
   await toggleConvPin(convId, pinned);
 }
 
@@ -354,10 +340,7 @@ async function handleToggleMute(convId: string): Promise<void> {
     c.id === convId ? { ...c, muted } : c
   );
   renderConvList(filteredConversations(), state.activeConvId, state.users, getMyId());
-  Toast.show(muted ? 'Đã tắt thông báo' : 'Đã bật thông báo', {
-    type: 'success',
-    timeout: 2000,
-  });
+  Toast.show(muted ? 'Đã tắt thông báo' : 'Đã bật thông báo', { type: 'success', timeout: 2000 });
   await toggleConvMute(convId, muted);
 }
 
@@ -365,10 +348,6 @@ async function handleToggleMute(convId: string): Promise<void> {
    INIT
    ============================================================ */
 
-/**
- * Khởi tạo Chat feature. Idempotent — gọi nhiều lần không sao.
- * Chỉ chạy khi Auth đã sẵn sàng (Auth.user != null).
- */
 export async function initChatFeature(): Promise<void> {
   if (state.initialized) return;
   const myId = getMyId();
@@ -379,7 +358,6 @@ export async function initChatFeature(): Promise<void> {
   state.initialized = true;
   console.log('🚀 [chat] initChatFeature for user:', myId);
 
-  /* 1. Bind events — 1 lần duy nhất. */
   const handlers: ChatUIHandlers = {
     onOpenConversation: (convId) => void openConversation(convId),
     onSendMessage: (text) => void handleSendMessage(text),
@@ -399,16 +377,31 @@ export async function initChatFeature(): Promise<void> {
     },
     onTogglePin: (convId) => void handleTogglePin(convId),
     onToggleMute: (convId) => void handleToggleMute(convId),
+    
+    // CẬP NHẬT XỬ LÝ MỞ CÀI ĐẶT NHÓM
     onOpenInfo: () => {
-      /* TODO: port chat info modal (05c-groups PHẦN 11). */
-      Toast.show('Thông tin cuộc trò chuyện — sắp ra mắt', { type: 'info' });
+      const conv = findConv(state.activeConvId);
+      if (!conv || conv.type !== 'group') {
+        Toast.show('Chỉ có thể cài đặt cho nhóm', { type: 'info' });
+        return;
+      }
+      openGroupSettings(
+        conv.id, 
+        conv.name || 'Nhóm', 
+        conv.avatar_url || null, 
+        (newName, newAvatarUrl) => {
+          state.conversations = state.conversations.map(c => 
+            c.id === conv.id ? { ...c, name: newName, avatar_url: newAvatarUrl } : c
+          );
+          renderAll();
+        }
+      );
     },
     onCreateGroup: () => void handleCreateGroup(),
     onOpenDM: (userId) => void openDMWithUser(userId),
   };
   bindChatEvents(handlers);
 
-  /* 2. Load users trước (cho peer name / avatar). */
   const users = await fetchUsers();
   state.users = users.map((u) => ({
     ...u,
@@ -416,7 +409,6 @@ export async function initChatFeature(): Promise<void> {
     status: 'offline' as const,
   }));
 
-  /* 3. Load conversations + bulk messages. */
   const convs = await fetchConversations();
   state.conversations = convs;
 
@@ -427,11 +419,9 @@ export async function initChatFeature(): Promise<void> {
     if (state.activeConvId) void markConversationAsSeen(state.activeConvId);
   }
 
-  /* 4. Render lần đầu. */
   renderAll();
   syncTabUI();
 
-  /* 5. Subscribe realtime. */
   subscribeToRealtime(
     handleRealtimeMessage,
     handleRealtimeStatus,
@@ -439,10 +429,6 @@ export async function initChatFeature(): Promise<void> {
   );
 }
 
-/**
- * Cleanup — gọi khi logout / chuyển trang.
- * Reset state + unsubscribe channel (tránh memory leak).
- */
 export function destroyChatFeature(): void {
   unsubscribeRealtime();
   state.conversations = [];

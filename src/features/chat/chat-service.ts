@@ -1,8 +1,6 @@
 /* ============================================================
    FPC LAB · src/features/chat/chat-service.ts
    Supabase data access + Realtime subscription cho Chat Module.
-   Port logic từ v14 `05b-actions.js` (load, send, realtime) +
-   `05c-groups.js` (DM, group). Không chứa DOM / state.
    ============================================================ */
 
 import type { RealtimeChannel, SupabaseClient } from '@supabase/supabase-js';
@@ -19,7 +17,6 @@ import type {
   StatusUpdate,
 } from './types';
 
-/* ---------- Global Window augmentation (FPC_SUPABASE bridge) ---------- */
 declare global {
   interface Window {
     FPC_SUPABASE?: {
@@ -30,8 +27,6 @@ declare global {
 }
 
 const DEFAULT_AVATAR_COLOR = 'violet';
-
-/* ---------- Internal helpers ---------- */
 
 function getSb(): SupabaseClient | null {
   return window.FPC_SUPABASE?.client ?? null;
@@ -97,6 +92,7 @@ function mapDbConversation(
     id: c.id,
     type: c.type,
     name: c.name ?? undefined,
+    avatar_url: c.avatar_url ?? undefined,
     avatarColor: c.avatar_color ?? DEFAULT_AVATAR_COLOR,
     members,
     peerId,
@@ -124,10 +120,6 @@ function uuid(): string {
    READ APIS
    ============================================================ */
 
-/**
- * Fetch toàn bộ conversations mà user hiện tại tham gia.
- * (channel = global, member/peer = participant)
- */
 export async function fetchConversations(): Promise<Conversation[]> {
   const sb = getSb();
   const myId = getCurrentUserId();
@@ -152,7 +144,6 @@ export async function fetchConversations(): Promise<Conversation[]> {
   return userRows.map((c) => mapDbConversation(c, myId));
 }
 
-/** Fetch tin nhắn của 1 conversation, sort tăng dần theo created_at. */
 export async function fetchMessages(convId: string): Promise<Message[]> {
   const sb = getSb();
   if (!sb || !convId) return [];
@@ -170,10 +161,6 @@ export async function fetchMessages(convId: string): Promise<Message[]> {
   return ((data ?? []) as DbMessage[]).map(mapDbMessage);
 }
 
-/**
- * Bulk-load tin nhắn cho nhiều conversation — dùng cho initial render
- * (giống `loadConversationsFromSupabase` của v14).
- */
 export async function fetchMessagesBulk(
   convIds: string[]
 ): Promise<Record<string, Message[]>> {
@@ -196,7 +183,6 @@ export async function fetchMessagesBulk(
   return byConv;
 }
 
-/** Fetch profiles để hiển thị peer name / avatar cho DM & group. */
 export async function fetchUsers(): Promise<
   { id: string; name: string; email?: string; role?: string; initial: string }[]
 > {
@@ -217,10 +203,6 @@ export async function fetchUsers(): Promise<
    WRITE APIS
    ============================================================ */
 
-/**
- * Gửi tin nhắn — Optimistic ID (client-generated UUID) để đồng bộ realtime.
- * Trả về Message đã persist (có thể dùng để optimistic update ngay).
- */
 export async function sendMessage(
   convId: string,
   text: string
@@ -269,7 +251,6 @@ export async function sendMessage(
   return msg;
 }
 
-/** Đánh dấu toàn bộ incoming message trong conv là "seen". */
 export async function markConversationAsSeen(convId: string): Promise<void> {
   const sb = getSb();
   const myId = getCurrentUserId();
@@ -284,7 +265,6 @@ export async function markConversationAsSeen(convId: string): Promise<void> {
   if (error) console.warn('[chat-service] markSeen error:', error.message);
 }
 
-/** Cập nhật status 1 message (dùng trong realtime ack). */
 export async function updateMessageStatus(
   msgId: string,
   status: MessageStatus
@@ -328,10 +308,6 @@ export async function toggleConvMute(
    DM & GROUP
    ============================================================ */
 
-/**
- * Tìm DM giữa user hiện tại và `userId`. Nếu chưa có → tạo mới.
- * Trả về Conversation đã persist.
- */
 export async function getOrCreateDM(
   userId: string
 ): Promise<Conversation | null> {
@@ -339,7 +315,6 @@ export async function getOrCreateDM(
   const myId = getCurrentUserId();
   if (!sb || !myId || !userId || userId === myId) return null;
 
-  /* 1. Query DM có chứa peer user trong members. */
   const { data, error } = await sb
     .from('conversations')
     .select('*')
@@ -354,7 +329,6 @@ export async function getOrCreateDM(
     if (match) return mapDbConversation(match, myId);
   }
 
-  /* 2. Chưa có → tạo mới. */
   const newId = uuid();
   const nowIso = new Date().toISOString();
   const members = [myId, userId];
@@ -395,7 +369,6 @@ export async function getOrCreateDM(
   };
 }
 
-/** Tạo group chat với tên + danh sách thành viên (không gồm creator). */
 export async function createGroup(
   name: string,
   members: string[]
@@ -429,7 +402,6 @@ export async function createGroup(
     return null;
   }
 
-  /* System message chào mừng. */
   await sb.from('messages').insert({
     id: uuid(),
     conversation_id: groupId,
@@ -455,6 +427,27 @@ export async function createGroup(
   };
 }
 
+/** Cập nhật tên và avatar cho nhóm chat */
+export async function updateGroupInfo(
+  groupId: string,
+  name: string,
+  avatarUrl: string | null
+): Promise<boolean> {
+  const sb = getSb();
+  if (!sb || !groupId) return false;
+
+  const { error } = await sb
+    .from('conversations')
+    .update({ name, avatar_url: avatarUrl })
+    .eq('id', groupId);
+
+  if (error) {
+    console.error('[chat-service] updateGroupInfo failed:', error.message);
+    return false;
+  }
+  return true;
+}
+
 /* ============================================================
    REALTIME
    ============================================================ */
@@ -470,10 +463,6 @@ export interface RealtimeCallbacks {
 
 let _channel: RealtimeChannel | null = null;
 
-/**
- * Subscribe Supabase Realtime — messages (INSERT/UPDATE) + conversations
- * (INSERT/UPDATE). Idempotent: gọi nhiều lần cũng chỉ tạo 1 channel.
- */
 export function subscribeToRealtime(
   onMessageReceived: RealtimeCallbacks['onMessageReceived'],
   onStatusUpdated: RealtimeCallbacks['onStatusUpdated'],
@@ -486,7 +475,6 @@ export function subscribeToRealtime(
 
   _channel = sb
     .channel('fpc_chat_realtime_v15')
-    /* ----- messages: INSERT ----- */
     .on(
       'postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'messages' },
@@ -496,7 +484,6 @@ export function subscribeToRealtime(
         onMessageReceived(mapDbMessage(raw));
       }
     )
-    /* ----- messages: UPDATE (status sent→delivered→seen) ----- */
     .on(
       'postgres_changes',
       { event: 'UPDATE', schema: 'public', table: 'messages' },
@@ -510,7 +497,6 @@ export function subscribeToRealtime(
         });
       }
     )
-    /* ----- conversations: INSERT (DM/group mới từ máy khác) ----- */
     .on(
       'postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'conversations' },
@@ -525,7 +511,6 @@ export function subscribeToRealtime(
         onConversationChanged(mapDbConversation(raw, myId), 'insert');
       }
     )
-    /* ----- conversations: UPDATE (pinned/muted/last_message_at) ----- */
     .on(
       'postgres_changes',
       { event: 'UPDATE', schema: 'public', table: 'conversations' },
@@ -541,7 +526,6 @@ export function subscribeToRealtime(
     });
 }
 
-/** Cleanup — bắt buộc gọi khi logout / unmount để tránh memory leak. */
 export function unsubscribeRealtime(): void {
   const sb = getSb();
   if (_channel && sb) {

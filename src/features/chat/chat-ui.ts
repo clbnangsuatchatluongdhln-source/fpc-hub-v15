@@ -1,7 +1,6 @@
 /* ============================================================
    FPC LAB · src/features/chat/chat-ui.ts
    Pure DOM render + event binding cho Chat.
-   Port từ v14 `05a-render.js`. KHÔNG gọi Supabase trực tiếp.
    ============================================================ */
 
 import { $, $$, el, clear, escHtml, debounce } from '../../utils';
@@ -22,10 +21,6 @@ export const CONV_COLORS: Record<string, string> = {
   emerald: 'from-emerald-500 to-teal-500',
   indigo: 'from-indigo-500 to-violet-500',
 };
-
-/* ============================================================
-   HELPERS
-   ============================================================ */
 
 function getUserById(users: ChatUser[], id: string | undefined): ChatUser | null {
   if (!id) return null;
@@ -67,7 +62,6 @@ function pickAvatarColor(conv: Conversation, fallbackIdx = 0): string {
   return palette[fallbackIdx % palette.length] as string;
 }
 
-/** Icon DOM thuần (không dùng innerHTML — tuân thủ escHtml rule). */
 function statusIcon(status: MessageStatus): HTMLElement {
   const i = document.createElement('i');
   i.className =
@@ -94,6 +88,19 @@ export function renderConvAvatar(
   if (size !== 44) {
     wrap.style.width = `${size}px`;
     wrap.style.height = `${size}px`;
+  }
+
+  // ƯU TIÊN 1: Nếu là group và có avatar_url
+  if (conv.type === 'group' && conv.avatar_url) {
+    const inner = document.createElement('div');
+    inner.className = 'av-1 overflow-hidden';
+    const img = document.createElement('img');
+    img.src = conv.avatar_url;
+    img.alt = conv.name || 'Group';
+    img.className = 'w-full h-full object-cover';
+    inner.append(img);
+    wrap.append(inner);
+    return wrap;
   }
 
   if (conv.type === 'channel') {
@@ -163,11 +170,7 @@ export function renderConvList(
   clear(list);
 
   if (conversations.length === 0) {
-    /* Empty state — dùng escHtml cho an toàn (dynamic content tiềm năng). */
-    const msg =
-      conversations.length === 0
-        ? 'Chưa có cuộc trò chuyện nào.'
-        : 'Không tìm thấy cuộc trò chuyện.';
+    const msg = 'Chưa có cuộc trò chuyện nào.';
     list.innerHTML = `<div class="p-8 text-center text-slate-500 text-xs">${escHtml(msg)}</div>`;
     return;
   }
@@ -284,8 +287,7 @@ export function renderChatHeader(
     if (peer?.status === 'online') {
       status.className += ' text-emerald-400';
       const dot = document.createElement('span');
-      dot.className =
-        'inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1';
+      dot.className = 'inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1';
       status.append(dot, document.createTextNode('Trực tuyến'));
     } else if (peer?.status === 'away') {
       status.className += ' text-amber-400';
@@ -304,6 +306,18 @@ export function renderChatHeader(
 
   info.append(name, status);
   box.append(av, info);
+
+  // NÚT CÀI ĐẶT CHO NHÓM (3 chấm)
+  if (conv.type === 'group') {
+    const settingsBtn = document.createElement('button');
+    settingsBtn.className = 'w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition flex items-center justify-center shrink-0 ml-2';
+    settingsBtn.setAttribute('data-action', 'open-chat-info');
+    settingsBtn.setAttribute('aria-label', 'Cài đặt nhóm');
+    const icon = document.createElement('i');
+    icon.className = 'fa-solid fa-ellipsis-vertical';
+    settingsBtn.append(icon);
+    box.append(settingsBtn);
+  }
 }
 
 /* ============================================================
@@ -325,12 +339,10 @@ export function renderMessages(
   if (messages.length === 0) {
     clear(list);
     const empty = el('div', {
-      class:
-        'flex-1 flex flex-col items-center justify-center text-center py-10 text-slate-500',
+      class: 'flex-1 flex flex-col items-center justify-center text-center py-10 text-slate-500',
     });
     const circle = el('div', {
-      class:
-        'w-14 h-14 rounded-full bg-white/5 flex items-center justify-center mb-3',
+      class: 'w-14 h-14 rounded-full bg-white/5 flex items-center justify-center mb-3',
     });
     const icon = document.createElement('i');
     icon.className = 'fa-regular fa-comments text-2xl opacity-50';
@@ -344,7 +356,6 @@ export function renderMessages(
     return;
   }
 
-  /* Nếu có empty state → xoá trước khi append. */
   const emptyState = list.querySelector('.flex-1.flex.flex-col.items-center');
   if (emptyState) emptyState.remove();
 
@@ -354,13 +365,10 @@ export function renderMessages(
   let hasNew = false;
 
   messages.forEach((m, i) => {
-    const existing = list.querySelector<HTMLElement>(
-      `[data-msg-id="${m.id}"]`
-    );
+    const existing = list.querySelector<HTMLElement>(`[data-msg-id="${m.id}"]`);
     const isMine = m.senderId === currentUserId;
 
     if (existing) {
-      /* Cập nhật status icon tại chỗ — không re-render toàn bộ. */
       if (isMine) {
         const statusEl = existing.querySelector<HTMLElement>('.msg-status');
         if (statusEl) {
@@ -409,9 +417,6 @@ export function renderMessages(
       bubble.append(author);
     }
 
-    /* Text content: dùng textContent (an toàn XSS). Nếu buộc phải
-       dùng innerHTML thì phải bọc escHtml — nhưng ở đây textContent
-       là đủ và chuẩn hơn. */
     bubble.append(document.createTextNode(m.text || ''));
 
     const time = document.createElement('div');
@@ -465,12 +470,7 @@ export function updateTotalUnread(conversations: Conversation[]): void {
    EVENT BINDING
    ============================================================ */
 
-/**
- * Gắn toàn bộ DOM event listener cho chat panel.
- * Idempotent-safe: dùng `data-bound` attribute để tránh bind trùng.
- */
 export function bindChatEvents(handlers: ChatUIHandlers): void {
-  /* ---- Conversation list (event delegation) ---- */
   const convList = $('#convList');
   if (convList && convList.dataset.bound !== '1') {
     convList.dataset.bound = '1';
@@ -482,7 +482,6 @@ export function bindChatEvents(handlers: ChatUIHandlers): void {
     });
   }
 
-  /* ---- Search input (debounced) ---- */
   const searchInput = $('#convSearch') as HTMLInputElement | null;
   if (searchInput && searchInput.dataset.bound !== '1') {
     searchInput.dataset.bound = '1';
@@ -492,7 +491,6 @@ export function bindChatEvents(handlers: ChatUIHandlers): void {
     searchInput.addEventListener('input', debounced);
   }
 
-  /* ---- Tabs ---- */
   if (!document.body.dataset.chatTabsBound) {
     document.body.dataset.chatTabsBound = '1';
     $$<HTMLElement>('.conv-tab').forEach((tab) => {
@@ -503,7 +501,6 @@ export function bindChatEvents(handlers: ChatUIHandlers): void {
     });
   }
 
-  /* ---- Message form submit ---- */
   const form = $('#messageForm') as HTMLFormElement | null;
   if (form && form.dataset.bound !== '1') {
     form.dataset.bound = '1';
@@ -519,7 +516,6 @@ export function bindChatEvents(handlers: ChatUIHandlers): void {
     });
   }
 
-  /* ---- Enter (không Shift) trong textarea ---- */
   const input = $('#messageInput') as HTMLTextAreaElement | null;
   if (input && input.dataset.bound !== '1') {
     input.dataset.bound = '1';
@@ -531,7 +527,6 @@ export function bindChatEvents(handlers: ChatUIHandlers): void {
     });
   }
 
-  /* ---- Global [data-action] — attach 1 lần ---- */
   if (!document.body.dataset.chatActionsBound) {
     document.body.dataset.chatActionsBound = '1';
     document.addEventListener('click', (e) => {

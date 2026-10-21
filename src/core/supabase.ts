@@ -14,6 +14,5 @@ export const supabase: SupabaseClient = createClient(url, key);
 /* ============================================================
    LEGACY BRIDGE — expose Supabase client cho các module
    v14 port sang v15 đọc qua `window.FPC_SUPABASE.client`.
-   (chat-service.ts, file-service.ts, ...)
    ============================================================ */
 window.FPC_SUPABASE = { client: supabase };
