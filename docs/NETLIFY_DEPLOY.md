@@ -30,3 +30,5 @@ Site đã tạo và nối repo public, production branch codex/netlify-deploy. N
 Key đã đồng bộ; domain HTTPS đã thêm CORS Tigris/B2, giữ rule local và bucket private. Windows CLI đóng gói lỗi EISDIR cả Node 24 và 22, nên dùng remote Linux build từ commit đã push. Hash map chuẩn hóa LF để Windows/Git/Linux nhất quán. Deploy vẫn cần kiểm tra thành công trước khi coi site live.
 
 Lần sau: connect-storage.mjs --config <localfile> → npm exec --yes --package=netlify-cli@27.20.0 -- node scripts/sync-netlify-env.mjs --connection TIGRIS_02 --free-tier (chỉ xem plan), thêm --apply sau khi được ủy quyền chuyển bộ key mới tới site. Cuối cùng deploy lại để Functions nạp environment mới. Không cần sửa mã app.
+
+Map phát hành bỏ cache CLI supabase/.temp và db/seed_demo.sql local chưa phát hành; các migration/test/schema nguồn vẫn được theo dõi. Không đổi hoặc xóa tệp demo local. Kiểm tra hash bằng Git blob trước remote build.

@@ -10,8 +10,8 @@ const files = [];
 async function walk(relative) {
   for (const entry of await readdir(path.join(root, relative), { withFileTypes: true })) {
     const name = `${relative}/${entry.name}`;
-    if (entry.isDirectory()) { if (!['node_modules', 'dist', '.git'].includes(entry.name)) await walk(name); }
-    else if (!entry.name.startsWith('.env')) files.push(name);
+    if (entry.isDirectory()) { if (!['node_modules', 'dist', '.git', '.temp', '.netlify'].includes(entry.name)) await walk(name); }
+    else if (!entry.name.startsWith('.env') && name !== 'db/seed_demo.sql') files.push(name);
   }
 }
 for (const folder of ['src', 'api', 'db', 'supabase', 'scripts', 'netlify']) await walk(folder);
