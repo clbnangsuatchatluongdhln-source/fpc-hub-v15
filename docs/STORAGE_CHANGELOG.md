@@ -1,5 +1,13 @@
 # Sổ thay đổi kho tệp
 
+## Nối tài khoản B2 thứ hai — 17/11/2026
+
+- FPCBackblaze2 đã thêm thành connection B2_02 (5353ffe3-b4f5-4bde-bf8d-ca780cd6ff71), bucket private FPCblackblaze2, endpoint s3.us-west-004.backblazeb2.com. Dùng key con FPC-HUB-B2-02 chỉ list/read/write/delete files, giới hạn bucket/prefix fpc-hub/. Key quản trị gửi trong chat chỉ giữ local, không đưa Netlify. Ngân sách nội bộ 8 GiB, cảnh báo 80%, dừng 90%; video: B2 cũ 10 → B2_02 15 → Tigris 20; tài liệu: Tigris 10 → B2 cũ 20 → B2_02 30. Local probe upload/private read/delete/CORS đạt, Netlify đã nhận 4 biến STORAGE_CONN_B2_02_*, đang redeploy để kiểm tra API cloud kết nối mới.
+- Bucket mới không có CORS trả NoSuchCorsConfiguration (khác cách viết AWS NoSuchCORSConfiguration); helper nhận cả hai tên. configure-storage-cors thử preflight trước để key con không cần read/write bucket settings khi CORS đã có.
+- Thêm verify-storage-connection.mjs: fixture Auth riêng, trusted ticket ép đúng connection, cloud finalize/read/delete, pin version chống replay, negative Head ngoài prefix, cleanup đúng object UUID. Không sửa priority hoặc key kho cũ để test.
+- Quay lại nếu lỗi: tắt write_enabled chỉ connection B2_02; giữ env/registry nếu còn tệp. Không xóa kho hoặc thu hồi key đang có tệp. Không đổi schema DB.
+
+
 ## Netlify public production — 17/11/2026
 
 - Chủ dự án duyệt mở link chính. Đã lưu Project visibility qua dashboard: Production Public, Deploy Preview Private; không đổi cả team. API enum non-production bị 422, không có thay đổi ở lần thử đó.

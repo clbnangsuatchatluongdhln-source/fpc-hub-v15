@@ -1,5 +1,8 @@
 # FPC HUB v15 — bản đồ dự án
 
+> **Kho B2 thứ hai — 17/11/2026:** FPCBackblaze2 đã thêm thành connection B2_02 (5353ffe3-b4f5-4bde-bf8d-ca780cd6ff71), bucket private FPCblackblaze2, endpoint s3.us-west-004.backblazeb2.com. Dùng key con FPC-HUB-B2-02 chỉ list/read/write/delete files, giới hạn bucket/prefix fpc-hub/. Key quản trị gửi trong chat chỉ giữ local, không đưa Netlify. Ngân sách nội bộ 8 GiB, cảnh báo 80%, dừng 90%; video: B2 cũ 10 → B2_02 15 → Tigris 20; tài liệu: Tigris 10 → B2 cũ 20 → B2_02 30. Local probe upload/private read/delete/CORS đạt, Netlify đã nhận 4 biến STORAGE_CONN_B2_02_*, đang redeploy để kiểm tra API cloud kết nối mới.
+
+
 > **Deploy Netlify — 17/11/2026:** https://fpc-hub-v15.netlify.app đã mở: Production Public, Deploy Preview Private (đã lưu qua dashboard và kiểm tra màn đăng nhập FPC). Gateway 5 API + scheduled storage-maintenance Node 22 đã deploy; cron 02:05 UTC = 09:05 Asia/Bangkok. 68 kiểm tra API thật trên Netlify đạt; 171 unit pass; 14 HTML/JS/CSS public không chứa key server. Tài khoản/tệp test đã dọn. Source app đang chạy e0a5245; nhánh phát hành codex/netlify-deploy chứa map mới. Xem docs/NETLIFY_DEPLOY.md.
 
 

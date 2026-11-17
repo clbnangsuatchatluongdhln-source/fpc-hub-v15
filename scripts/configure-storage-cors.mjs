@@ -1,6 +1,8 @@
+import {getSignedUrl} from '@aws-sdk/s3-request-presigner';
+import {randomUUID} from 'node:crypto';
 import {loadEnv} from 'vite';
 import {createClient} from '@supabase/supabase-js';
-import {S3Client,GetBucketCorsCommand,PutBucketCorsCommand} from '@aws-sdk/client-s3';
+import {S3Client,GetBucketCorsCommand,PutBucketCorsCommand,PutObjectCommand} from '@aws-sdk/client-s3';
 const env=loadEnv('development',process.cwd(),'');
 const origin='https://fpc-hub-v15.netlify.app';
 const admin=createClient(env.SUPABASE_URL,env.SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false}});
@@ -12,7 +14,10 @@ for(const c of data.filter(row=>['b2','tigris'].includes(row.provider))) {
  if(!key||!secret)throw Error('Missing local configuration: '+c.label);
  const client=new S3Client({endpoint:c.endpoint_url,region:get('REGION')??'auto',credentials:{accessKeyId:key,secretAccessKey:secret},maxAttempts:2});
  try {
-  let previous;try{previous=await client.send(new GetBucketCorsCommand({Bucket:c.bucket}));}catch(e){if(e.name!=='NoSuchCORSConfiguration')throw e;previous={CORSRules:[]};}
+  const signed=await getSignedUrl(client,new PutObjectCommand({Bucket:c.bucket,Key:'fpc-hub/_connection-tests/cors-'+randomUUID(),ContentType:'application/octet-stream'}),{expiresIn:60});
+  const preflight=await fetch(signed,{method:'OPTIONS',headers:{Origin:origin,'Access-Control-Request-Method':'PUT','Access-Control-Request-Headers':'content-type'},signal:AbortSignal.timeout(15000)});
+  if(preflight.ok&&preflight.headers.get('access-control-allow-origin')===origin){console.log(JSON.stringify({connection:c.label,provider:c.provider,origin,cors:'PRESENT'}));continue;}
+  let previous;try{previous=await client.send(new GetBucketCorsCommand({Bucket:c.bucket}));}catch(e){if(!['NoSuchCORSConfiguration','NoSuchCorsConfiguration'].includes(e.name))throw e;previous={CORSRules:[]};}
   const rules=previous.CORSRules??[];
   const covered=rules.some(rule=>(rule.AllowedOrigins??[]).includes(origin)&&(rule.AllowedMethods??[]).includes('PUT')&&(rule.AllowedHeaders??[]).some(h=>h==='*'||h.toLowerCase()==='content-type'));
   if(!covered&&process.argv.includes('--apply'))await client.send(new PutBucketCorsCommand({Bucket:c.bucket,CORSConfiguration:{CORSRules:[...rules,{ID:'fpc-netlify-origin',AllowedOrigins:[origin],AllowedMethods:['PUT','GET','HEAD'],AllowedHeaders:['Content-Type','If-None-Match'],MaxAgeSeconds:3600}]}}));

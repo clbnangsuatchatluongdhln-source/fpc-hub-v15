@@ -57,7 +57,7 @@ if(c.provider==='imagekit') {
   const url=await getSignedUrl(client,new PutObjectCommand({Bucket:c.bucket,Key:key,ContentType:'image/png'}),{expiresIn:60});
   async function corsReady(){for(const origin of origins){const r=await fetch(url,{method:'OPTIONS',headers:{Origin:origin,'Access-Control-Request-Method':'PUT','Access-Control-Request-Headers':c.provider==='tigris'?'content-type,if-none-match':'content-type'},signal:AbortSignal.timeout(15000)});if(!r.ok || r.headers.get('access-control-allow-origin')!==origin)return false;}return true;}
   if(!await corsReady()) {
-   let old;try{old=await client.send(new GetBucketCorsCommand({Bucket:c.bucket}));}catch(error){if(error.name!=='NoSuchCORSConfiguration')throw error;old={CORSRules:[]};}
+   let old;try{old=await client.send(new GetBucketCorsCommand({Bucket:c.bucket}));}catch(error){if(!['NoSuchCORSConfiguration','NoSuchCorsConfiguration'].includes(error.name))throw error;old={CORSRules:[]};}
    const rules=old.CORSRules??[];
    await client.send(new PutBucketCorsCommand({Bucket:c.bucket,CORSConfiguration:{CORSRules:[...rules,{AllowedOrigins:origins,AllowedMethods:['PUT','GET','HEAD'],AllowedHeaders:['Content-Type','If-None-Match'],MaxAgeSeconds:3600}]}}));
    if(!await corsReady())throw new Error('Browser CORS verification failed');
