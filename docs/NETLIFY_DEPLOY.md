@@ -1,41 +1,50 @@
-# Đưa FPC HUB lên GitHub + Netlify
+# FPC HUB trên GitHub + Netlify — 17/11/2026
 
-> **Trạng thái mới nhất — 17/11/2026:** Netlify đã deploy ready: https://fpc-hub-v15.netlify.app, commit app e0a5245, deploy 6afc296e4f54d342bbf7c7aa. Gateway và storage-maintenance Node 22 có thật; cron 02:05 UTC = 09:05 Asia/Bangkok. HTTP smoke đang bị Netlify team login toàn site chặn, chưa xác minh API cloud. Chờ chủ dự án duyệt chuyển SSO sang chỉ non-production; chưa thay đổi access-control. 171 unit pass; fixture cloud thất bại ở gate đã dọn, 0 test user và 0 retention job thật.
+> https://fpc-hub-v15.netlify.app đã mở: Production Public, Deploy Preview Private (đã lưu qua dashboard và kiểm tra màn đăng nhập FPC). Gateway 5 API + scheduled storage-maintenance Node 22 đã deploy; cron 02:05 UTC = 09:05 Asia/Bangkok. 68 kiểm tra API thật trên Netlify đạt; 171 unit pass; 14 HTML/JS/CSS public không chứa key server. Tài khoản/tệp test đã dọn. Source app đang chạy e0a5245; nhánh phát hành codex/netlify-deploy chứa map mới.
 
+## Địa chỉ và nhánh
 
-- Vite build xuất dist; netlify.toml chuyển /api/* sang gateway Function.
-- netlify/_lib/bridge.ts giữ nguyên method, Bearer, JSON, status và CORS của 5 API hiện có; body tối đa 32 KiB. Không chuyển file bytes qua Function.
-- netlify/functions/storage-maintenance.ts là Scheduled Function 02:05 UTC (09:05 Asia/Bangkok), chỉ áp dụng lịch cho published production deploy. Netlify không cho gọi scheduled function qua URL; thời gian chạy giới hạn, worker dùng AbortSignal 20 giây và giữ trạng thái để retry.
-- Supabase pg_cron vẫn nhắc 09:00 hằng ngày. Vercel adapter/config giữ tương thích nhưng không cần Vercel để chạy Netlify.
-- Biến frontend VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY là public, scope Builds. Secret SUPABASE_SERVICE_ROLE_KEY, B2_*, TIGRIS_STORAGE_*, IMAGEKIT_*, STORAGE_CONN_* chỉ phía server, scope Functions, không VITE_. APP_ORIGINS chứa origin chính xác của site và local khi cần test. Không đặt secret trong netlify.toml.
-- Khi có domain production: thêm origin vào B2/Tigris CORS, giữ bucket private; thêm redirect URL Supabase Auth nếu sử dụng email/OAuth redirect. Không cho phép wildcard preview domain đọc dữ liệu CLB.
-- Lần sau thêm kho: script connect-storage lưu bộ key local và registry; phải đồng bộ các biến STORAGE_CONN_<NAME>_* sang Functions trên Netlify rồi deploy lại. Có key local không có nghĩa môi trường cloud đã nhận key.
-- Kiểm thử: 171 unit bao gồm bridge/auth/body limit/route whitelist và worker abort; typecheck pass. Build/functions packaging và smoke cloud cần kiểm tra trước khi ghi deploy hoàn tất.
+- App: https://fpc-hub-v15.netlify.app
+- Repo: https://github.com/clbnangsuatchatluongdhln-source/fpc-hub-v15/tree/codex/netlify-deploy
+- Netlify dashboard: https://app.netlify.com/projects/fpc-hub-v15
+- Site ID: 47088215-6782-412b-8d8e-79d7d5656524; team Free ngoc-khanh-23-nguyen.
+- Deploy đã kiểm tra: 6afc296e4f54d342bbf7c7aa, app commit e0a5245. Main không bị force-push. Netlify có deploy key GitHub chỉ đọc do chủ dự án duyệt.
 
-Mốc chuẩn bị trước deploy: xem trạng thái mới nhất đầu tài liệu.
+## Đường chạy
 
+netlify.toml build Vite dist; /api/* rewrite sang gateway. netlify/_lib/bridge.ts giữ Bearer/method/JSON/status/CORS, body tối đa 32 KiB. Năm API upload-url, file-metadata, download-url, file-delete, storage-control dùng cùng service/DB guard local. File bytes đi trực tiếp browser ↔ provider.
 
-## Kế hoạch environment đã rà soát
+storage-maintenance là Scheduled Function 09:05 mỗi ngày. Metadata deploy xác nhận lịch; không gọi trực tiếp qua URL trong production. Worker dùng AbortSignal 20 giây, lỗi giữ trạng thái để retry; sự kiện phải được admin duyệt và chờ 7 ngày. Supabase pg_cron nhắc 09:00 vẫn hoạt động. Chưa chạy dọn sự kiện thật khi test; test chỉ dùng fixture riêng.
 
-Đích duy nhất: site 47088215-6782-412b-8d8e-79d7d5656524, https://fpc-hub-v15.netlify.app, team Free ngoc-khanh-23-nguyen.
+## Biến môi trường — giới hạn Free thực tế
 
-- Builds/public: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY.
-- Functions/secret: SUPABASE_SERVICE_ROLE_KEY, B2_APPLICATION_KEY, TIGRIS_STORAGE_SECRET_ACCESS_KEY, IMAGEKIT_PRIVATE_KEY. Chỉ context production; không vào frontend/GitHub.
-- Functions/config: SUPABASE_URL, B2_ENDPOINT, B2_REGION, B2_KEY_ID, B2_BUCKET, TIGRIS_STORAGE_ENDPOINT, TIGRIS_STORAGE_REGION, TIGRIS_STORAGE_ACCESS_KEY_ID, TIGRIS_STORAGE_BUCKET, IMAGEKIT_PUBLIC_KEY, IMAGEKIT_URL_ENDPOINT, STORAGE_DOCUMENT_PROVIDER, STORAGE_VIDEO_PROVIDER, APP_ORIGINS.
-- Nguồn: môi trường local hiện có. Helper scripts/sync-netlify-env.mjs mặc định PLAN_ONLY, chỉ tên biến/scope; --apply mới chuyển giá trị và khóa đúng site ID/domain. Không chuyển R2 hay kho chưa dùng.
-- Bộ duyệt tự động yêu cầu chấp thuận cụ thể trước khi chuyển credential sang Netlify; chưa đồng bộ key. Không đưa giá trị key vào hướng dẫn hoặc log.
+Netlify Free từ chối scope riêng Functions. Chủ dự án đã duyệt bốn key/site đích và giao chọn phương án bảo mật/chi phí. Đã chọn environment mặc định chỉ context production, scopes builds/functions/runtime/post_processing, không bật cờ Secrets Controller trả phí. Key hiện diện trên máy chủ build và Functions; không được mô tả là cách ly khỏi build.
 
+Chỉ VITE_SUPABASE_URL và VITE_SUPABASE_ANON_KEY được đưa vào frontend. Bốn secret: SUPABASE_SERVICE_ROLE_KEY, B2_APPLICATION_KEY, TIGRIS_STORAGE_SECRET_ACCESS_KEY, IMAGEKIT_PRIVATE_KEY. Cấu hình phụ gồm URL/bucket/region/key ID, provider routing và APP_ORIGINS. Không có giá trị key trong source/map/GitHub. NPM_FLAGS=--ignore-scripts giảm thực thi lifecycle scripts lúc npm install; build production phải là mã được tin cậy.
 
-## Cập nhật thực tế — Netlify Free
+scripts/sync-netlify-env.mjs mặc định PLAN_ONLY, khóa đúng site ID/domain, chỉ in tên/scope. --free-tier chọn scope mặc định; --apply chuyển giá trị khi đã được ủy quyền. Không in token/key. .env*, .netlify và cache Supabase được gitignore.
 
-Site đã tạo và nối repo public, production branch codex/netlify-deploy. Netlify API từ chối scope riêng với lỗi Upgrade your Netlify account to set specific scopes. Chủ dự án duyệt bốn key/site đích và giao chọn phương án bảo mật/chi phí. Đã chọn Free: 20 biến trong context production, scope mặc định builds/functions/runtime/post_processing; không bật cờ Secrets Controller trả phí. Chỉ hai biến VITE_SUPABASE_* đi vào frontend. Không hứa secret bị cách ly khỏi build; code build production phải được tin cậy. NPM_FLAGS=--ignore-scripts giảm rủi ro lifecycle scripts.
+## Nối tài khoản kho mới
 
-Key đã đồng bộ; domain HTTPS đã thêm CORS Tigris/B2, giữ rule local và bucket private. Windows CLI đóng gói lỗi EISDIR cả Node 24 và 22, nên dùng remote Linux build từ commit đã push. Hash map chuẩn hóa LF để Windows/Git/Linux nhất quán. Deploy vẫn cần kiểm tra thành công trước khi coi site live.
+1. scripts/connect-storage.mjs --config <file.storage.local.json>: probe thật, ghi registry + namespace secret local STORAGE_CONN_<NAME>_*.
+2. npm exec --yes --package=netlify-cli@27.20.0 -- node scripts/sync-netlify-env.mjs --connection NAME --free-tier: xem plan cho đúng kho.
+3. Thêm --apply khi được phép chuyển bộ key mới tới site; rồi deploy lại để Functions nạp env mới. Không cần sửa mã app.
+4. scripts/configure-storage-cors.mjs --apply thêm đúng origin production cho các kết nối S3, giữ rule cũ. CORS Tigris/B2 hiện đã có domain này; bucket vẫn private.
 
-Lần sau: connect-storage.mjs --config <localfile> → npm exec --yes --package=netlify-cli@27.20.0 -- node scripts/sync-netlify-env.mjs --connection TIGRIS_02 --free-tier (chỉ xem plan), thêm --apply sau khi được ủy quyền chuyển bộ key mới tới site. Cuối cùng deploy lại để Functions nạp environment mới. Không cần sửa mã app.
+## Visibility đã áp dụng
 
-Map phát hành bỏ cache CLI supabase/.temp và db/seed_demo.sql local chưa phát hành; các migration/test/schema nguồn vẫn được theo dõi. Không đổi hoặc xóa tệp demo local. Kiểm tra hash bằng Git blob trước remote build.
+Dashboard → Project configuration → General → Visitor access → Project visibility. Đã chọn Customize → Private → Applies to Previews only → Save. Kết quả hiển thị Production Public, Deploy Preview Private. Thành viên chỉ cần tài khoản FPC khi mở link chính.
 
-Deploy key SSH chỉ đọc đã được chủ dự án duyệt và cấu hình vào đúng repo/site. Main không bị force-push. Production branch là codex/netlify-deploy; source đã push. Chưa xác nhận webhook tự deploy: tiếp tục dùng netlify deploy --remote --prod cho các lần phát hành.
+Không dùng enum API phỏng đoán: sso_login_context=non-production bị 422 và không đổi cấu hình. Thay đổi visibility đã được chủ dự án duyệt rồi thực hiện qua dashboard. Không đổi default của cả team.
 
-Điểm chờ: automatic approval review từ chối mở Netlify SSO khỏi production vì cần duyệt access-control cụ thể. Câu hỏi phê duyệt đã gửi; không tự thay đổi khi chưa có câu trả lời.
+## Phát hành và kiểm tra
+
+- Push lên codex/netlify-deploy rồi chạy netlify deploy --remote --prod. Chưa xác nhận webhook tự deploy; không coi push là đã publish.
+- Windows bundler bị EISDIR trên Node 24/22; remote Linux build đã thành công. Không cần sửa dependency app.
+- Map hash chuẩn hóa LF; kiểm tra 176 Git blob khớp. Bỏ cache CLI và db/seed_demo.sql local không phát hành, giữ file local nguyên trạng.
+- Đã đạt 171 unit; Netlify thật 68 kiểm tra API ba kho + admin/quota/approve/hold/notification; trang/assets HTTP 200, CORS preflight 204 và origin lạ 403. Payload hợp lệ tới API chưa Auth bị 401; payload xóa rỗng có thể 400 do validation trước Auth.
+- Đã quan sát màn đăng nhập FPC trên browser. Quét 14 asset HTML/JS/CSS public không thấy secret server; fixture được dọn. Không có xóa sự kiện thật. Đây không phải kết luận đã audit mọi module; SQL0008/chat-notification Edge Function còn theo trạng thái riêng trong map.
+
+## Quay lại khi lỗi
+
+Netlify Deploys cho phép quay về deploy trước; giữ registry và env của kho cũ để đọc tệp. Không rollback/drop database hoặc đổi key/bucket chỉ vì lỗi hosting. Muốn tạm khóa site: Project visibility → Private → Production and previews, theo quyết định của chủ dự án. Map và STORAGE_CHANGELOG.md lưu đường đi.

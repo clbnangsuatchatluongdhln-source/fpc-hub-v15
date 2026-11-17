@@ -1,6 +1,6 @@
 # Trạng thái kho FPC HUB — 17/11/2026
 
-> Netlify đã deploy ready: https://fpc-hub-v15.netlify.app, commit app e0a5245, deploy 6afc296e4f54d342bbf7c7aa. Gateway và storage-maintenance Node 22 có thật; cron 02:05 UTC = 09:05 Asia/Bangkok. HTTP smoke đang bị Netlify team login toàn site chặn, chưa xác minh API cloud. Chờ chủ dự án duyệt chuyển SSO sang chỉ non-production; chưa thay đổi access-control. 171 unit pass; fixture cloud thất bại ở gate đã dọn, 0 test user và 0 retention job thật.
+> https://fpc-hub-v15.netlify.app đã mở: Production Public, Deploy Preview Private (đã lưu qua dashboard và kiểm tra màn đăng nhập FPC). Gateway 5 API + scheduled storage-maintenance Node 22 đã deploy; cron 02:05 UTC = 09:05 Asia/Bangkok. 68 kiểm tra API thật trên Netlify đạt; 171 unit pass; 14 HTML/JS/CSS public không chứa key server. Tài khoản/tệp test đã dọn. Source app đang chạy e0a5245; nhánh phát hành codex/netlify-deploy chứa map mới.
 
 
 ## Đã triển khai kho xoay — 17/11/2026

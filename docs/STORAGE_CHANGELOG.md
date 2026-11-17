@@ -1,5 +1,12 @@
 # Sổ thay đổi kho tệp
 
+## Netlify public production — 17/11/2026
+
+- Chủ dự án duyệt mở link chính. Đã lưu Project visibility qua dashboard: Production Public, Deploy Preview Private; không đổi cả team. API enum non-production bị 422, không có thay đổi ở lần thử đó.
+- Netlify thật 68 API check đạt: 3 provider, quota, admin, duyệt/hold và notification. 14 public asset không có secret server. Fixture đã dọn; không xóa sự kiện thật.
+- Gateway + cron 09:05 Node 22 đã xác nhận trong deploy metadata; site app commit e0a5245, bản map mới nằm trên nhánh codex/netlify-deploy. Không coi đây là audit toàn app.
+
+
 ## Chuẩn bị Netlify — 17/11/2026
 
 - Thêm gateway Netlify giữ 5 API cũ, cron 09:05 và AbortSignal 20 giây cho cleanup/worker. Body giới hạn 32 KiB; secret không vào bundle. .env và .netlify bị gitignore.

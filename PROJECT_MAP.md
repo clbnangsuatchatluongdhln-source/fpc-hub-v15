@@ -1,9 +1,9 @@
 # FPC HUB v15 — bản đồ dự án
 
-> **Deploy Netlify — 17/11/2026:** Netlify đã deploy ready: https://fpc-hub-v15.netlify.app, commit app e0a5245, deploy 6afc296e4f54d342bbf7c7aa. Gateway và storage-maintenance Node 22 có thật; cron 02:05 UTC = 09:05 Asia/Bangkok. HTTP smoke đang bị Netlify team login toàn site chặn, chưa xác minh API cloud. Chờ chủ dự án duyệt chuyển SSO sang chỉ non-production; chưa thay đổi access-control. 171 unit pass; fixture cloud thất bại ở gate đã dọn, 0 test user và 0 retention job thật. Xem docs/NETLIFY_DEPLOY.md.
+> **Deploy Netlify — 17/11/2026:** https://fpc-hub-v15.netlify.app đã mở: Production Public, Deploy Preview Private (đã lưu qua dashboard và kiểm tra màn đăng nhập FPC). Gateway 5 API + scheduled storage-maintenance Node 22 đã deploy; cron 02:05 UTC = 09:05 Asia/Bangkok. 68 kiểm tra API thật trên Netlify đạt; 171 unit pass; 14 HTML/JS/CSS public không chứa key server. Tài khoản/tệp test đã dọn. Source app đang chạy e0a5245; nhánh phát hành codex/netlify-deploy chứa map mới. Xem docs/NETLIFY_DEPLOY.md.
 
 
-> **Release Netlify đang chuẩn bị:** netlify.toml → gateway (5 API, cùng quyền cũ) và scheduled storage-maintenance 09:05. Netlify Free không tách scope Functions: dùng environment production mặc định cho build/server theo lựa chọn đã được giao, không đưa secret vào VITE_. 171 unit pass; chưa xác minh deploy. Điểm sửa/tiếp tục: docs/NETLIFY_DEPLOY.md. Site fpc-hub-v15.netlify.app đã tạo trong team Free; 20 biến production đã đồng bộ sau chấp thuận và lựa chọn Free. Helper sync-netlify-env mặc định chỉ lập kế hoạch. Repo hiện có origin GitHub; release dùng nhánh codex/netlify-deploy, không force-push main.
+> **Lịch sử chuẩn bị Netlify:** cấu hình đã hoàn tất; trạng thái triển khai ở dòng trên.
 
 
 > **Kho xoay đã triển khai — 17/11/2026:** Supabase registry nhiều tài khoản, quota cá nhân, duyệt xóa + notifications live. App Kho tài nguyên có bảng quản trị. scripts/connect-storage.mjs kiểm tra key/endpoint/bucket rồi thêm tài khoản mới không sửa source; xem docs/STORAGE_CONNECT.md. 80% cảnh báo, 90% chọn kho kế tiếp; tệp cũ giữ connection_id. Supabase nhắc hằng ngày 09:00; worker xóa có thật nhưng cron Vercel cần deploy. DB 52 assertion, unit 159, API 68 check gồm admin đã đạt. Không có dữ liệu thật bị xóa.
