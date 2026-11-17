@@ -102,3 +102,5 @@ Require an active server-read profile in api/upload-url.ts before all three prov
 
 
 - Netlify: site/nhánh đã nối, environment production mặc định (Free không hỗ trợ scope Functions riêng) đã đồng bộ theo ủy quyền. Thêm CORS đúng domain cho Tigris/B2. Map hash chuẩn hóa LF; không đổi key/bucket/quyền dữ liệu. Windows bundler lỗi EISDIR, chuyển remote Linux build.
+
+- Netlify production deploy ready e0a5245; gateway + lịch 09:05 đã có trong deploy metadata. HTTP bị Netlify SSO all chặn; chưa đổi cấu hình vì automatic approval yêu cầu xác nhận riêng, đang chờ người dùng. Cloud test fixture đã dọn. Không báo API cloud đã PASS.

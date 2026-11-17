@@ -1,5 +1,8 @@
 # FPC HUB v15 — bản đồ dự án
 
+> **Deploy Netlify — 17/11/2026:** Netlify đã deploy ready: https://fpc-hub-v15.netlify.app, commit app e0a5245, deploy 6afc296e4f54d342bbf7c7aa. Gateway và storage-maintenance Node 22 có thật; cron 02:05 UTC = 09:05 Asia/Bangkok. HTTP smoke đang bị Netlify team login toàn site chặn, chưa xác minh API cloud. Chờ chủ dự án duyệt chuyển SSO sang chỉ non-production; chưa thay đổi access-control. 171 unit pass; fixture cloud thất bại ở gate đã dọn, 0 test user và 0 retention job thật. Xem docs/NETLIFY_DEPLOY.md.
+
+
 > **Release Netlify đang chuẩn bị:** netlify.toml → gateway (5 API, cùng quyền cũ) và scheduled storage-maintenance 09:05. Netlify Free không tách scope Functions: dùng environment production mặc định cho build/server theo lựa chọn đã được giao, không đưa secret vào VITE_. 171 unit pass; chưa xác minh deploy. Điểm sửa/tiếp tục: docs/NETLIFY_DEPLOY.md. Site fpc-hub-v15.netlify.app đã tạo trong team Free; 20 biến production đã đồng bộ sau chấp thuận và lựa chọn Free. Helper sync-netlify-env mặc định chỉ lập kế hoạch. Repo hiện có origin GitHub; release dùng nhánh codex/netlify-deploy, không force-push main.
 
 

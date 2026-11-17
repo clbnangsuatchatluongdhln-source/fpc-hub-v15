@@ -1,5 +1,8 @@
 # Trạng thái kho FPC HUB — 17/11/2026
 
+> Netlify đã deploy ready: https://fpc-hub-v15.netlify.app, commit app e0a5245, deploy 6afc296e4f54d342bbf7c7aa. Gateway và storage-maintenance Node 22 có thật; cron 02:05 UTC = 09:05 Asia/Bangkok. HTTP smoke đang bị Netlify team login toàn site chặn, chưa xác minh API cloud. Chờ chủ dự án duyệt chuyển SSO sang chỉ non-production; chưa thay đổi access-control. 171 unit pass; fixture cloud thất bại ở gate đã dọn, 0 test user và 0 retention job thật.
+
+
 ## Đã triển khai kho xoay — 17/11/2026
 
 - Supabase live: storage_pool_governance, storage_governance_schedule, storage_connection_identity và storage_pool_snapshot_accounting. Registry ba kết nối, quota từng user, ledger 24 giờ, jobs duyệt xóa và thông báo đã có thật; không còn bản nháp.
