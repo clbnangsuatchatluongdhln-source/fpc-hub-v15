@@ -21,3 +21,5 @@ Chạy từ dự án: `node scripts/connect-storage.mjs --config C:/private/new.
 Nếu probe lỗi, script dừng và không đăng ký kho. Nếu provider từ chối dọn tệp thử, kiểm tra thư mục fpc-hub/_connection-tests trên chính kho đó. File cấu hình secret giữ ở máy riêng hoặc xóa sau khi nhập; không gửi lên Git.
 
 Thử toàn luồng: `node scripts/verify-storage-app.mjs --pause-for-approval --pause-for-admin` tạo tài khoản @example.invalid. Runner chỉ in ID fixture để duyệt active, rồi admin bằng SQL quản trị trong test; không dùng tài khoản thật. Sau test runner dọn user, quota, event/job/connection fixture. Không tự áp quyền admin cho tài khoản sử dụng thực tế.
+
+Cloud Netlify hiện dùng Free: environment context production mặc định bao gồm cả build/server, không chỉ Functions. Sau khi thêm tài khoản NAME, dùng sync-netlify-env.mjs --connection NAME --free-tier để xem plan rồi --apply khi được phép chuyển key. Deploy lại; chỉ lưu local chưa đủ cho cloud.

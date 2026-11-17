@@ -21,3 +21,12 @@ Trạng thái hiện tại: đang chuẩn bị release, site đã tạo, URL ch�
 - Functions/config: SUPABASE_URL, B2_ENDPOINT, B2_REGION, B2_KEY_ID, B2_BUCKET, TIGRIS_STORAGE_ENDPOINT, TIGRIS_STORAGE_REGION, TIGRIS_STORAGE_ACCESS_KEY_ID, TIGRIS_STORAGE_BUCKET, IMAGEKIT_PUBLIC_KEY, IMAGEKIT_URL_ENDPOINT, STORAGE_DOCUMENT_PROVIDER, STORAGE_VIDEO_PROVIDER, APP_ORIGINS.
 - Nguồn: môi trường local hiện có. Helper scripts/sync-netlify-env.mjs mặc định PLAN_ONLY, chỉ tên biến/scope; --apply mới chuyển giá trị và khóa đúng site ID/domain. Không chuyển R2 hay kho chưa dùng.
 - Bộ duyệt tự động yêu cầu chấp thuận cụ thể trước khi chuyển credential sang Netlify; chưa đồng bộ key. Không đưa giá trị key vào hướng dẫn hoặc log.
+
+
+## Cập nhật thực tế — Netlify Free
+
+Site đã tạo và nối repo public, production branch codex/netlify-deploy. Netlify API từ chối scope riêng với lỗi Upgrade your Netlify account to set specific scopes. Chủ dự án duyệt bốn key/site đích và giao chọn phương án bảo mật/chi phí. Đã chọn Free: 20 biến trong context production, scope mặc định builds/functions/runtime/post_processing; không bật cờ Secrets Controller trả phí. Chỉ hai biến VITE_SUPABASE_* đi vào frontend. Không hứa secret bị cách ly khỏi build; code build production phải được tin cậy. NPM_FLAGS=--ignore-scripts giảm rủi ro lifecycle scripts.
+
+Key đã đồng bộ; domain HTTPS đã thêm CORS Tigris/B2, giữ rule local và bucket private. Windows CLI đóng gói lỗi EISDIR cả Node 24 và 22, nên dùng remote Linux build từ commit đã push. Hash map chuẩn hóa LF để Windows/Git/Linux nhất quán. Deploy vẫn cần kiểm tra thành công trước khi coi site live.
+
+Lần sau: connect-storage.mjs --config <localfile> → npm exec --yes --package=netlify-cli@27.20.0 -- node scripts/sync-netlify-env.mjs --connection TIGRIS_02 --free-tier (chỉ xem plan), thêm --apply sau khi được ủy quyền chuyển bộ key mới tới site. Cuối cùng deploy lại để Functions nạp environment mới. Không cần sửa mã app.

@@ -100,3 +100,5 @@ Require an active server-read profile in api/upload-url.ts before all three prov
 - Sửa reload env Vite, restart đúng server của dự án; test bắt buộc provider thực tế tránh false PASS do provider cũ. Đạt 141 unit test, 27 DB assertion rollback, 43 API check thật với ba provider; provider probe cả ba đạt và dọn các phiên bản thử.
 - Quay lại: chuyển STORAGE_VIDEO_PROVIDER=tigris nếu B2 lỗi, restart dev/API; giữ storage_version và đường đọc/xóa B2 cho file đã có. Không xóa cột/mở lại metadata insert hoặc sửa provider của row để giả di chuyển tệp.
 
+
+- Netlify: site/nhánh đã nối, environment production mặc định (Free không hỗ trợ scope Functions riêng) đã đồng bộ theo ủy quyền. Thêm CORS đúng domain cho Tigris/B2. Map hash chuẩn hóa LF; không đổi key/bucket/quyền dữ liệu. Windows bundler lỗi EISDIR, chuyển remote Linux build.

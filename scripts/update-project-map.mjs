@@ -17,7 +17,11 @@ async function walk(relative) {
 for (const folder of ['src', 'api', 'db', 'supabase', 'scripts', 'netlify']) await walk(folder);
 files.push('probe-profiles.mjs', 'verify-messages.mjs', 'verify-p0-conv-states.mjs', 'package.json', 'index.html', 'vite.config.ts', 'vercel.json', 'tsconfig.json', 'PROJECT_MAP.md', 'AGENTS.md', 'docs/STORAGE_CHANGELOG.md', 'docs/STORAGE_READY_STATUS.md', 'docs/STORAGE_CONNECT.md', 'netlify.toml', 'docs/NETLIFY_DEPLOY.md');
 const hashes = {};
-for (const file of [...new Set(files)].sort()) hashes[file] = createHash('sha256').update(await readFile(path.join(root, file))).digest('hex');
+for (const file of [...new Set(files)].sort()) {
+  const data = await readFile(path.join(root, file));
+  const content = /\.(ts|js|mjs|json|html|css|sql|md|toml|yml)$/.test(file) ? data.toString('utf8').replace(/\r\n/g, '\n') : data;
+  hashes[file] = createHash('sha256').update(content).digest('hex');
+}
 if (process.argv.includes('--check')) {
   let previous;
   try { previous = JSON.parse(await readFile(statePath, 'utf8')); } catch { previous = { hashes: {} }; }
@@ -27,7 +31,7 @@ if (process.argv.includes('--check')) {
 } else {
   const updatedAt = new Date().toISOString();
   const groups = [
-    ['GitHub & Netlify', 'Đang chuẩn bị release: Vite dist + 5 API qua gateway Netlify Functions. Scheduled worker 09:05; secret chỉ scope Functions. Có adapter tương thích Vercel; kiểm thử 171 unit. Chưa ghi site live cho tới khi xác minh deploy.', ['netlify.toml', 'netlify/functions/gateway.ts', 'netlify/_lib/bridge.ts', 'netlify/functions/storage-maintenance.ts', 'docs/NETLIFY_DEPLOY.md', 'scripts/sync-netlify-env.mjs']],
+    ['GitHub & Netlify', 'Đang chuẩn bị release: Vite dist + 5 API qua gateway Netlify Functions. Scheduled worker 09:05; environment chỉ production; Free dùng scope mặc định cho build/server. Có adapter tương thích Vercel; kiểm thử 171 unit. Chưa ghi site live cho tới khi xác minh deploy.', ['netlify.toml', 'netlify/functions/gateway.ts', 'netlify/_lib/bridge.ts', 'netlify/functions/storage-maintenance.ts', 'docs/NETLIFY_DEPLOY.md', 'scripts/sync-netlify-env.mjs']],
     ['Script quản trị local', 'Ba script vận hành chỉ đọc SUPABASE_SERVICE_ROLE_KEY từ môi trường tiến trình, dừng nếu thiếu/trống; không đưa khóa vào source hoặc VITE_. Cần rotate/revoke khóa đã lộ riêng; chưa xác minh live.', ['probe-profiles.mjs', 'verify-messages.mjs', 'verify-p0-conv-states.mjs', 'scripts/operational-credentials.test.mjs']],
     ['Cửa vào ứng dụng', 'Đăng nhập → kiểm tra quyền → mở lịch, chat và các trang. Bánh răng mở menu tài khoản, Sáng/Tối, đăng xuất. Vite nay chạy API tệp và bảng quản trị kho local, khóa server không vào frontend.', ['src/main.ts', 'vite.config.ts', 'src/app/routes.ts', 'src/core/auth.ts', 'src/core/access.ts', 'src/features/settings/settings-menu.ts', 'src/features/settings/profile-settings.ts', 'src/core/theme.ts']],
     ['Lịch ↔ Chat', 'Xem lịch và nhắn tin cạnh nhau. Mở chat từ sidebar; đã bỏ Tạo mới/Tin nhắn trên header và bong bóng chat, giữ Thông báo. Lịch cá nhân / ban / CLB bật bằng checkbox. Chat có hàng đợi khi mất mạng.', ['src/app/workspace-shell.ts', 'src/features/calendar/index.ts', 'src/features/chat/index.ts', 'src/features/chat/sync/offline-queue.ts']],
