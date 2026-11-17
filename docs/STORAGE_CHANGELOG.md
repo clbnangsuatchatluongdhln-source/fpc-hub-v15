@@ -2,7 +2,7 @@
 
 ## Nối tài khoản B2 thứ hai — 17/11/2026
 
-- FPCBackblaze2 đã thêm thành connection B2_02 (5353ffe3-b4f5-4bde-bf8d-ca780cd6ff71), bucket private FPCblackblaze2, endpoint s3.us-west-004.backblazeb2.com. Dùng key con FPC-HUB-B2-02 chỉ list/read/write/delete files, giới hạn bucket/prefix fpc-hub/. Key quản trị gửi trong chat chỉ giữ local, không đưa Netlify. Ngân sách nội bộ 8 GiB, cảnh báo 80%, dừng 90%; video: B2 cũ 10 → B2_02 15 → Tigris 20; tài liệu: Tigris 10 → B2 cũ 20 → B2_02 30. Local probe upload/private read/delete/CORS đạt, Netlify đã nhận 4 biến STORAGE_CONN_B2_02_*, đang redeploy để kiểm tra API cloud kết nối mới.
+- FPCBackblaze2 đã thêm thành connection B2_02 (5353ffe3-b4f5-4bde-bf8d-ca780cd6ff71), bucket private FPCblackblaze2, endpoint s3.us-west-004.backblazeb2.com. Dùng key con FPC-HUB-B2-02 chỉ list/read/write/delete files, giới hạn bucket/prefix fpc-hub/. Key quản trị gửi trong chat chỉ giữ local, không đưa Netlify. Ngân sách nội bộ 8 GiB, cảnh báo 80%, dừng 90%; video: B2 cũ 10 → B2_02 15 → Tigris 20; tài liệu: Tigris 10 → B2 cũ 20 → B2_02 30. Đã deploy Netlify (d23d9cc, deploy 6afc36469a4102ae56fea334). 17 kiểm tra đúng B2_02 qua API production đạt: upload/private read/delete, pin version chống replay và cấm đọc ngoài prefix. Fixture đã dọn; rollback DB xác minh B2 cũ chạm ngưỡng thì video mới đi B2_02. Quét 14 asset public không có secret server.
 - Bucket mới không có CORS trả NoSuchCorsConfiguration (khác cách viết AWS NoSuchCORSConfiguration); helper nhận cả hai tên. configure-storage-cors thử preflight trước để key con không cần read/write bucket settings khi CORS đã có.
 - Thêm verify-storage-connection.mjs: fixture Auth riêng, trusted ticket ép đúng connection, cloud finalize/read/delete, pin version chống replay, negative Head ngoài prefix, cleanup đúng object UUID. Không sửa priority hoặc key kho cũ để test.
 - Quay lại nếu lỗi: tắt write_enabled chỉ connection B2_02; giữ env/registry nếu còn tệp. Không xóa kho hoặc thu hồi key đang có tệp. Không đổi schema DB.
@@ -119,3 +119,5 @@ Require an active server-read profile in api/upload-url.ts before all three prov
 - Netlify: site/nhánh đã nối, environment production mặc định (Free không hỗ trợ scope Functions riêng) đã đồng bộ theo ủy quyền. Thêm CORS đúng domain cho Tigris/B2. Map hash chuẩn hóa LF; không đổi key/bucket/quyền dữ liệu. Windows bundler lỗi EISDIR, chuyển remote Linux build.
 
 - Netlify production deploy ready e0a5245; gateway + lịch 09:05 đã có trong deploy metadata. HTTP bị Netlify SSO all chặn; chưa đổi cấu hình vì automatic approval yêu cầu xác nhận riêng, đang chờ người dùng. Cloud test fixture đã dọn. Không báo API cloud đã PASS.
+
+- Chốt B2_02: 171 unit đã đạt ở mốc code; 17 kiểm tra live đúng kho mới và cleanup PASS. DB rotation thử trong rollback, không thay số dung lượng/provider của người dùng thật. 0 test user, 0 file thử còn lại trên backup.

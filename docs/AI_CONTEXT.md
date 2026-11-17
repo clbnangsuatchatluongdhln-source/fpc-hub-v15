@@ -10,7 +10,7 @@ PORT tu v14, KHONG rewrite. v14 co ~70% logic da test.
 ## Stack (CHOT - khong doi)
 - Frontend: Vite + **Vanilla TypeScript** (khong React/Vue/framework)
 - DB: Supabase Postgres (schema hien co + migration additive)
-- Deploy: Vercel
+- Deploy: Netlify production; giữ adapter Vercel tương thích. Xem docs/NETLIFY_DEPLOY.md.
 - Dependency goc: @supabase/supabase-js, typescript, vite
 - Dev tool: **Biome** (lint + format, 1 package, Rust)
 

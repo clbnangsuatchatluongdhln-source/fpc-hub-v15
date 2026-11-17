@@ -1,5 +1,8 @@
 # FPC HUB trên GitHub + Netlify — 17/11/2026
 
+> **B2_02 đã lên production:** app commit d23d9cc, deploy 6afc36469a4102ae56fea334. Key con được đồng bộ theo namespace riêng. 17 kiểm tra kết nối mới trên cloud đạt và đã dọn fixture; 14 public asset không có key server. Cấu hình Public production / Private preview giữ nguyên.
+
+
 > https://fpc-hub-v15.netlify.app đã mở: Production Public, Deploy Preview Private (đã lưu qua dashboard và kiểm tra màn đăng nhập FPC). Gateway 5 API + scheduled storage-maintenance Node 22 đã deploy; cron 02:05 UTC = 09:05 Asia/Bangkok. 68 kiểm tra API thật trên Netlify đạt; 171 unit pass; 14 HTML/JS/CSS public không chứa key server. Tài khoản/tệp test đã dọn. Source app đang chạy e0a5245; nhánh phát hành codex/netlify-deploy chứa map mới.
 
 ## Địa chỉ và nhánh
