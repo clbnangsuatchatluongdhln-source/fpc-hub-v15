@@ -223,26 +223,23 @@ export function initCalendarDOM(ctrl: CalendarController): void {
       </button>
       <div id="calViewSwitcher" class="flex gap-0.5 p-0.5 rounded-lg bg-black/30 border border-white/[.06]"></div>
     </div>
-    <div class="flex-1 grid grid-cols-1 lg:grid-cols-[160px_1fr] gap-2 min-h-0">
-      <aside class="hidden lg:flex flex-col gap-2 min-h-0 overflow-hidden">
-        <div class="p-2 rounded-xl glass border border-white/[.06] shrink-0">
-          <div class="flex items-center justify-between mb-1.5">
-            <div id="miniTitle" class="text-[10px] font-black text-white"></div>
-            <div class="flex gap-0.5">
-              <button id="miniPrev" class="w-5 h-5 rounded text-slate-500 hover:text-white hover:bg-white/10 flex items-center justify-center text-[9px]"><i class="fa-solid fa-chevron-left"></i></button>
-              <button id="miniNext" class="w-5 h-5 rounded text-slate-500 hover:text-white hover:bg-white/10 flex items-center justify-center text-[9px]"><i class="fa-solid fa-chevron-right"></i></button>
-            </div>
-          </div>
-          <div id="miniGrid" class="grid grid-cols-7 gap-0.5 text-center"></div>
+
+    <div class="flex-1 flex gap-4 min-h-0 overflow-hidden">
+      <aside class="calendar-sidebar flex flex-col gap-4 shrink-0 overflow-y-auto scrollbar">
+        <div class="cal-panel shrink-0">
+          <h3 class="text-sm font-bold text-white mb-3">Lịch hiển thị</h3>
+          <div id="calFilterList" class="flex flex-wrap gap-2"></div>
         </div>
-        <div class="p-2 rounded-xl glass border border-white/[.06] flex-1 min-h-0 overflow-y-auto">
-          <div class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Hiển thị</div>
-          <div id="calFilterList" class="space-y-0.5"></div>
+
+        <div class="cal-panel flex-1">
+          <h3 class="text-sm font-bold text-white mb-2">Sắp diễn ra</h3>
+          <div id="upcomingList" class="text-xs text-slate-400">Chưa có sự kiện nào sắp tới.</div>
         </div>
       </aside>
-      <div class="flex flex-col gap-1 min-h-0">
-        <div id="calBody" class="flex-1 rounded-2xl glass border border-white/[.06] overflow-hidden min-h-0"></div>
-        <div id="calLegendStrip" class="shrink-0 flex items-center justify-center gap-3 flex-wrap px-2 py-1 rounded-xl glass border border-white/[.06] text-[10px]">
+
+      <div class="flex-1 flex flex-col min-h-0 min-w-0">
+        <div id="calBody" class="cal-panel flex-1 min-h-0 p-0" aria-label="Lịch cuộn ngang"></div>
+        <div id="calLegendStrip" class="shrink-0 flex items-center justify-center gap-3 flex-wrap px-2 py-2 mt-2 rounded-xl glass border border-white/[.06] text-[10px]">
           <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-pink-500"></span><span class="text-slate-400">Thiết kế / UI</span></span>
           <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-cyan-500"></span><span class="text-slate-400">Backend / Hạ tầng</span></span>
           <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-violet-500"></span><span class="text-slate-400">Họp / Sync</span></span>
@@ -259,9 +256,16 @@ export function initCalendarDOM(ctrl: CalendarController): void {
     const v = (e.target as HTMLSelectElement).value;
     ctrl.onYearChange(parseInt(v, 10));
   };
-  wrapper.querySelector<HTMLButtonElement>('#miniPrev')!.onclick = () => ctrl.onMiniPrev();
-  wrapper.querySelector<HTMLButtonElement>('#miniNext')!.onclick = () => ctrl.onMiniNext();
+  wrapper.querySelector<HTMLButtonElement>('#miniPrev')?.addEventListener('click', () => ctrl.onMiniPrev());
+  wrapper.querySelector<HTMLButtonElement>('#miniNext')?.addEventListener('click', () => ctrl.onMiniNext());
   wrapper.querySelector<HTMLButtonElement>('#calHoursToggle')!.onclick = () => ctrl.onHoursToggle();
+  const calendarBody = wrapper.querySelector<HTMLElement>('#calBody')!;
+  calendarBody.tabIndex = 0;
+  calendarBody.addEventListener('keydown', event => {
+    if (event.target !== calendarBody || !['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+    event.preventDefault();
+    calendarBody.scrollBy({ left: event.key === 'ArrowRight' ? 120 : -120, behavior: 'smooth' });
+  });
 }
 
 export function renderCalendar(ctx: RenderContext): void {
@@ -307,6 +311,7 @@ function renderCalBody(ctx: RenderContext): void {
     if (ctx.state.view === 'month') body.appendChild(buildMonthView(ctx));
     else if (ctx.state.view === 'week') body.appendChild(buildWeekView(ctx));
     else body.appendChild(buildDayView(ctx));
+    body.dataset.view = ctx.state.view;
   } finally {
     ctx.state.rendering = false;
   }
@@ -839,6 +844,7 @@ function renderViewSwitcher(ctx: RenderContext): void {
   for (const o of opts) {
     const btn = document.createElement('button');
     const active = ctx.state.view === o.k;
+    btn.setAttribute('aria-pressed', String(active));
     btn.className =
       `px-2 py-1 rounded-md text-[10px] font-black transition ` +
       (active
@@ -857,9 +863,9 @@ function renderFilterList(ctx: RenderContext): void {
   list.replaceChildren();
 
   const filters: Array<{ k: keyof CalendarFilters; l: string; color: EventTone }> = [
-    { k: 'myEvents', l: 'Của tôi', color: 'pink' },
-    { k: 'deptEvents', l: 'Ban', color: 'cyan' },
-    { k: 'clubEvents', l: 'CLB', color: 'violet' },
+    { k: 'myEvents', l: 'Lịch cá nhân', color: 'pink' },
+    { k: 'deptEvents', l: 'Lịch ban của tôi', color: 'cyan' },
+    { k: 'clubEvents', l: 'Lịch chung CLB', color: 'violet' },
     { k: 'tasks', l: 'Công việc', color: 'amber' },
     { k: 'showDone', l: 'Đã xong', color: 'emerald' },
   ];
@@ -870,6 +876,7 @@ function renderFilterList(ctx: RenderContext): void {
 
     const cb = document.createElement('input');
     cb.type = 'checkbox';
+    cb.setAttribute('aria-label', f.l);
     cb.checked = Boolean(ctx.state.filters[f.k]);
     cb.className = 'w-3 h-3 accent-violet-500 cursor-pointer';
 

@@ -2,7 +2,7 @@ import { Modal } from '@/ui/modal';
 import { Toast } from '@/ui/toast';
 import { el, clear, clamp, fmtBytes, uid, fileIcon, DAYS } from '@/utils';
 import { Store } from '@/core/store';
-import { getB2DownloadUrl } from '@/core/b2-client';
+import { getFileDownloadUrl } from './upload-service';
 import {
   uploadFile,
   saveFileMetadata,
@@ -126,7 +126,7 @@ async function processOneFile(file: File, eventId: string): Promise<void> {
     await animateTo(setPct, 0, 40, 400);
 
     // Upload (Tự động chọn ImageKit / B2 / Supabase)
-    const result = await uploadFile(file, eventId);
+    const result = await uploadFile(file, eventId, 'event');
     setPct(80);
 
     statusEl.textContent = 'Lưu thông tin...';
@@ -321,17 +321,10 @@ export function openFileHub(eventId: string, trigger?: HTMLElement | null): void
         // LOGIC TẢI XUỐNG MỚI (Đã fix lỗi TS)
         dlBtn.addEventListener('click', async () => {
           try {
-            if (f.kind === 'image' || f.kind === 'video') {
-              if (f.public_url) window.open(f.public_url, '_blank', 'noopener');
-            } else {
-              dlBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i>';
-              // FIX TS(2345)
-              if (!f.storage_path) throw new Error('Không tìm thấy đường dẫn file');
-              
-              const signedUrl = await getB2DownloadUrl(f.storage_path);
-              window.open(signedUrl, '_blank', 'noopener');
-              dlBtn.innerHTML = '<i class="fa-solid fa-download text-xs"></i>';
-            }
+            dlBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i>';
+            const signedUrl = await getFileDownloadUrl(f);
+            window.open(signedUrl, '_blank', 'noopener');
+            dlBtn.innerHTML = '<i class="fa-solid fa-download text-xs"></i>';
           } catch (error) {
             Toast.show('Lỗi khi lấy link tải file', { type: 'error' });
             dlBtn.innerHTML = '<i class="fa-solid fa-download text-xs"></i>';
@@ -412,7 +405,7 @@ async function deleteFileFromHub(eventId: string, fileId: string): Promise<void>
       
       if (target.storage_path) {
         // Truyền target.kind vào hàm xóa để biết nên xóa ImageKit, B2 hay Supabase
-        storageDeleted = await deleteFileFromStorage(target.storage_path, target.kind);
+        storageDeleted = await deleteFileFromStorage(target.storage_path, target.kind, target.id);
       }
       if (storageDeleted) {
         try { metadataDeleted = await deleteFileMetadata(target.id); }

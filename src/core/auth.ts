@@ -2,6 +2,7 @@
 import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 import type { AuthFlowResult, AuthState, UserProfile } from '../types';
+import { canManageClub } from './access';
 
 export const Auth: AuthState = {
   user: null,
@@ -99,9 +100,7 @@ export async function applySession(user: User | null): Promise<boolean> {
     Auth.profile = profile;
     Auth.isSuperAdmin =
       profile?.role === 'super_admin' && profile?.approval_status === 'active';
-    Auth.isClubAdmin =
-      (profile?.role === 'super_admin' || profile?.role === 'admin') &&
-      profile?.approval_status === 'active';
+    Auth.isClubAdmin = canManageClub(profile);
     Auth.initialized = true;
 
     console.info('🚦 auth applied', {

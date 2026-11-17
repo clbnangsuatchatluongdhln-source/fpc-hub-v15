@@ -10,7 +10,7 @@ import { el, fmtBytes, getUserDisplay } from './task-ui';
 import {
   createTask, updateTask, createSubtask, submitFilesToSubtask,
   scoreSubmission, rejectSubmission, submitTaskToPresident,
-  approveTaskSubmission, rejectTaskSubmission, logHistory,
+  approveTaskSubmission, rejectTaskSubmission,
   fetchTaskSubmissionById,
 } from './task-service';
 import type {
@@ -424,7 +424,7 @@ export function openCreateSubtaskModal(ctx: WorkflowContext, taskId: string): vo
       disableBtn(submitBtn, 'Đang lưu...');
       try {
         const orderIdx = ctx.subtasks.length + 1;
-        const newSub = await createSubtask({
+        await createSubtask({
           task_id: taskId,
           title,
           description: desc || null,
@@ -434,24 +434,8 @@ export function openCreateSubtaskModal(ctx: WorkflowContext, taskId: string): vo
           created_by: ctx.currentProfile.id,
         });
 
-        if (task.status === 'assigned') {
-          await logHistory({
-            task_id: taskId,
-            action: 'start_working',
-            old_status: 'assigned',
-            new_status: 'working',
-            note: 'Chuyển sang đang làm khi bắt đầu chia subtask',
-          });
-        }
 
         const assignee = getUserDisplay(assigneeId, ctx.users);
-        await logHistory({
-          task_id: taskId,
-          action: 'create_subtask',
-          note: `Tạo subtask: "${title}" giao cho ${assignee.name}`,
-          metadata: { subtask_id: newSub.id },
-        });
-
         Toast.show(`Đã giao "${title}" cho ${assignee.name}`, { type: 'success' });
         safeClose(MODAL_IDS.createSubtask);
         await ctx.refreshList();
@@ -617,12 +601,6 @@ export function openSubmitFileModal(ctx: WorkflowContext, subtaskId: string): vo
           isLate,
           lateDays,
         });
-        await logHistory({
-          task_id: subtask.task_id,
-          action: 'submit_subtask_file',
-          note: `Thành viên nộp ${chosenFiles.length} file cho subtask "${subtask.title}"${isLate ? ` (Trễ ${lateDays} ngày)` : ''}`,
-          metadata: { subtask_id: subtaskId, file_count: chosenFiles.length },
-        });
         Toast.show('Đã nộp bài thành công! Chờ Trưởng ban chấm điểm.', { type: 'success' });
         safeClose(MODAL_IDS.submitFile);
         await ctx.refreshList();
@@ -786,12 +764,6 @@ export function openScoreModal(ctx: WorkflowContext, submissionId: string): void
           head_note: headNote,
           scored_by: ctx.currentProfile.id,
         });
-        await logHistory({
-          task_id: subtask.task_id,
-          action: 'reject_submission',
-          note: `Trưởng ban từ chối bài nộp của ${member.name}: "${headNote}"`,
-          metadata: { subtask_id: subtask.id, submission_id: sub.id },
-        });
         Toast.show(`Đã yêu cầu ${member.name} làm lại bài`, { type: 'warn' });
         safeClose(MODAL_IDS.score);
         await ctx.refreshDetail(subtask.task_id);
@@ -822,12 +794,6 @@ export function openScoreModal(ctx: WorkflowContext, submissionId: string): void
           score, contribution_pct: contrib,
           head_note: headNote,
           scored_by: ctx.currentProfile.id,
-        });
-        await logHistory({
-          task_id: subtask.task_id,
-          action: 'score_submission',
-          note: `Chấm ${score}/10 điểm (${contrib}%) cho ${member.name} ở phần việc "${subtask.title}"`,
-          metadata: { subtask_id: subtask.id, score, contribution_pct: contrib },
         });
         Toast.show(`Đã ghi nhận ${score}/10 điểm cho ${member.name}`, { type: 'success' });
         safeClose(MODAL_IDS.score);
@@ -1051,13 +1017,6 @@ export function openSubmitToPresidentModal(ctx: WorkflowContext, taskId: string)
           summary,
           scoreboard: scoreboardData,
         });
-        await logHistory({
-          task_id: taskId,
-          action: 'submit_to_president',
-          old_status: 'working',
-          new_status: 'pending_review',
-          note: `Trưởng ban nộp sản phẩm nghiệm thu lên Chủ nhiệm: "${summary}"`,
-        });
         Toast.show('Đã gửi sản phẩm và bảng điểm lên Chủ nhiệm duyệt!', { type: 'success' });
         safeClose(MODAL_IDS.submitToPresident);
         await ctx.refreshList();
@@ -1246,19 +1205,12 @@ export async function openPresidentReviewModal(
 
       rejectBtn.disabled = true;
       try {
-        const newCount = await rejectTaskSubmission({
+        await rejectTaskSubmission({
           taskSubmissionId,
           taskId: taskSub.task_id,
           reviewedBy: ctx.currentProfile.id,
           reason: note,
           currentRejectCount: task?.reject_count ?? 0,
-        });
-        await logHistory({
-          task_id: taskSub.task_id,
-          action: 'president_reject',
-          old_status: 'pending_review',
-          new_status: 'rejected',
-          note: `Chủ nhiệm từ chối: "${note}" (Lần từ chối: ${newCount})`,
         });
         Toast.show('Đã gửi thông báo từ chối tới ban phụ trách', { type: 'warn' });
         safeClose(MODAL_IDS.presidentReview);
@@ -1282,13 +1234,6 @@ export async function openPresidentReviewModal(
           taskId: taskSub.task_id,
           reviewedBy: ctx.currentProfile.id,
           note,
-        });
-        await logHistory({
-          task_id: taskSub.task_id,
-          action: 'president_approve',
-          old_status: 'pending_review',
-          new_status: 'approved',
-          note: `Chủ nhiệm nghiệm thu & duyệt sản phẩm${note ? `: "${note}"` : ''}`,
         });
         Toast.show('🎉 Đã phê duyệt thành công! Điểm số đã được ghi nhận.', { type: 'success', timeout: 5000 });
         safeClose(MODAL_IDS.presidentReview);

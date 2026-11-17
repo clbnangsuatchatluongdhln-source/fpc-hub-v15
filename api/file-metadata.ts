@@ -1,64 +1,28 @@
-// api/file-metadata.ts
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabaseAdmin, verifyUser, setCors } from './_lib/supabase';
+import type {VercelRequest,VercelResponse} from '@vercel/node';
+import {setCors,supabaseAdmin} from './_lib/supabase';
+import {StorageError} from './_lib/storage';
+import {activeUploader,uuidPattern,verifyUploadedObject,databaseUploadError,type UploadSession} from './_lib/upload-session';
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  setCors(res);
-  if (req.method === 'OPTIONS') return res.status(204).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-
-  const user = await verifyUser(req.headers.authorization);
-  if (!user) return res.status(401).json({ error: 'Cần đăng nhập' });
-
-  const b = (req.body ?? {}) as {
-    name?: string;
-    size?: number;
-    mimeType?: string;
-    kind?: string;
-    storagePath?: string;
-    publicUrl?: string;
-    folderId?: string;
-    context?: 'event' | 'project';
-  };
-  if (!b.name || !b.storagePath || !b.kind || !b.folderId || !b.context) {
-    return res.status(400).json({ error: 'Thiếu trường bắt buộc' });
-  }
-
-  const row = {
-    name: b.name,
-    size: b.size ?? 0,
-    original_size: b.size ?? 0,
-    mime_type: b.mimeType || 'application/octet-stream',
-    kind: b.kind,
-    storage_path: b.storagePath,
-    public_url: b.publicUrl || '',
-    event_id: b.context === 'event' ? b.folderId : null,
-    project_id: b.context === 'project' ? b.folderId : null,
-    uploaded_by: user.id,
-    saved_pct: 0,
-  };
-
+export default async function handler(req:VercelRequest,res:VercelResponse) {
+  if(!setCors(res,req.headers.origin))return res.status(403).json({error:'Origin không được phép'});
+  if(req.method==='OPTIONS')return res.status(204).end();
+  if(req.method!=='POST')return res.status(405).json({error:'Method not allowed'});
   try {
-    const { data, error } = await supabaseAdmin
-      .from('files')
-      .insert(row)
-      .select()
-      .single();
-    if (error) throw error;
-
-    return res.json({
-      id: data.id,
-      name: data.name,
-      size: data.size,
-      originalSize: data.original_size,
-      kind: data.kind,
-      uploadedBy: 'Bạn',
-      at: new Date(data.created_at).getTime(),
-      storage_path: data.storage_path,
-      public_url: data.public_url,
-    });
-  } catch (err) {
-    console.error('[file-metadata]', err);
-    return res.status(500).json({ error: 'Không lưu được metadata' });
+    const owner=await activeUploader(req.headers.authorization);
+    const body=req.body??{};
+    if(typeof body.ticketId!=='string' || !uuidPattern.test(body.ticketId))throw new StorageError('Cần phiếu upload hợp lệ');
+    if(Object.keys(body).some(key=>!['ticketId','objectId'].includes(key)))throw new StorageError('Không được tự đặt thông tin tệp hoặc nơi đính kèm');
+    const {data,error}=await supabaseAdmin.from('storage_uploads').select('*').eq('id',body.ticketId).eq('owner_id',owner).maybeSingle();
+    if(error || !data)throw new StorageError('Không tìm thấy phiếu upload của bạn',403);
+    const session=data as UploadSession;
+    if(!session.completed_at && Date.parse(session.expires_at)<=Date.now())throw new StorageError('Phiếu upload đã hết hạn',409);
+    const verified=session.completed_at?{objectId:session.provider==='imagekit'?String(body.objectId??''):session.storage_path,version:session.storage_version??null}:await verifyUploadedObject(session,body.objectId);
+    const finalized=await supabaseAdmin.rpc('storage_finalize_upload',{p_id:session.id,p_owner:owner,p_object_id:verified.objectId,p_version:verified.version});
+    if(finalized.error || !finalized.data)throw databaseUploadError(finalized.error);
+    const row=finalized.data;
+    return res.json({...row,originalSize:row.original_size,uploadedBy:'Bạn',at:new Date(row.created_at).getTime()});
+  } catch(error) {
+    if(error instanceof StorageError)return res.status(error.status).json({error:error.message});
+    return res.status(503).json({error:'Chưa xác minh được upload; thông tin tệp chưa được tạo'});
   }
 }

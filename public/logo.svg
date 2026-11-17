@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" class="w-full h-full">
+  <defs>
+    <path id="top-arc" d="M 60 200 A 140 140 0 1 1 340 200" fill="none" />
+    <path id="bottom-arc" d="M 340 200 A 140 140 0 0 1 60 200" fill="none" />
+  </defs>
+
+  <!-- Vòng tròn ngoài cùng (Xanh navy) -->
+  <circle cx="200" cy="200" r="185" fill="none" stroke="#1e3a8a" stroke-width="12" />
+  
+  <!-- Vòng tròn viền trong -->
+  <circle cx="200" cy="200" r="120" fill="none" stroke="#1e3a8a" stroke-width="4" />
+
+  <!-- Chữ nửa trên -->
+  <text font-family="Arial, sans-serif" font-weight="900" font-size="28" fill="#1e3a8a" letter-spacing="2">
+    <textPath href="#top-arc" startOffset="50%" text-anchor="middle">CLB NĂNG SUẤT CHẤT LƯỢNG</textPath>
+  </text>
+
+  <!-- Chữ nửa dưới -->
+  <text font-family="Arial, sans-serif" font-weight="900" font-size="26" letter-spacing="1.5">
+    <textPath href="#bottom-arc" startOffset="50%" text-anchor="middle">
+      <tspan fill="#1e3a8a">TRƯỜNG ĐẠI HỌC </tspan>
+      <tspan fill="#65a30d">LÂM NGHIỆP</tspan>
+    </textPath>
+  </text>
+
+  <!-- Icon Ngôi sao (Trái) -->
+  <polygon points="50,185 55,198 68,198 57,206 61,219 50,211 39,219 43,206 32,198 45,198" fill="#f59e0b" transform="translate(0, 0)" />
+
+  <!-- Icon Cây thông (Phải) -->
+  <g fill="#65a30d" transform="translate(335, 185) scale(0.6)">
+    <polygon points="25,0 10,20 20,20 5,40 18,40 0,60 50,60 32,40 45,40 30,20 40,20" />
+    <rect x="21" y="60" width="8" height="15" fill="#1e3a8a" />
+  </g>
+
+  <!-- Group Bánh răng trung tâm -->
+  <mask id="gear-cutout">
+    <rect width="400" height="400" fill="white" />
+    <path d="M 240 150 L 300 150 L 300 250 L 240 250 Z" fill="black" />
+  </mask>
+  
+  <g mask="url(#gear-cutout)">
+    <circle cx="200" cy="200" r="70" fill="none" stroke="#1e3a8a" stroke-width="20" stroke-dasharray="24 16" />
+    <circle cx="200" cy="200" r="58" fill="none" stroke="#1e3a8a" stroke-width="16" />
+  </g>
+
+  <!-- Nét vòng cung đỏ ở phần khuyết -->
+  <path d="M 262 165 A 65 65 0 0 1 262 235" fill="none" stroke="#dc2626" stroke-width="10" stroke-linecap="round" />
+
+  <!-- Kim chỉ thị màu cam/vàng -->
+  <path d="M 180 220 L 255 155 A 12 12 0 0 1 270 170 L 205 235 A 15 15 0 0 1 180 220 Z" fill="#f59e0b" />
+</svg>

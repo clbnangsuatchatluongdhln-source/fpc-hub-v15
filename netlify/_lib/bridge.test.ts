@@ -1,0 +1,11 @@
+import {it,expect} from 'vitest';
+import {createBridge} from './bridge';
+const bridge=createBridge({test:async(req,res)=>{res.setHeader('X-Test','yes');if(req.method==='OPTIONS')return res.status(204).end();if(!req.headers.authorization)return res.status(401).json({error:'Unauthorized'});return res.status(200).json({body:req.body,method:req.method});}});
+it('preserves bearer token, JSON, method, status and headers',async()=>{const response=await bridge(new Request('https://test.invalid/api/test',{method:'POST',headers:{Authorization:'Bearer test'},body:JSON.stringify({hello:'world'})}));expect(response.status).toBe(200);expect(response.headers.get('x-test')).toBe('yes');expect(response.headers.get('cache-control')).toBe('no-store');expect(await response.json()).toEqual({body:{hello:'world'},method:'POST'});});
+it('preserves endpoint authorization failure',async()=>expect((await bridge(new Request('https://test.invalid/api/test',{method:'POST',body:'{}'}))).status).toBe(401));
+it('supports function rewrite path',async()=>expect((await bridge(new Request('https://test.invalid/.netlify/functions/gateway/test',{method:'OPTIONS'}))).status).toBe(204));
+it('returns empty OPTIONS body',async()=>expect(await (await bridge(new Request('https://test.invalid/api/test',{method:'OPTIONS'}))).text()).toBe(''));
+it.each(['constructor','__proto__','test/other','unknown'])('does not dispatch unregistered route %s',async path=>expect((await bridge(new Request('https://test.invalid/api/'+path))).status).toBe(404));
+it('rejects malformed JSON before handler',async()=>expect((await bridge(new Request('https://test.invalid/api/test',{method:'POST',body:'{'}))).status).toBe(400));
+it('bounds incoming body to 32 KiB',async()=>expect((await bridge(new Request('https://test.invalid/api/test',{method:'POST',body:'x'.repeat(32769)}))).status).toBe(413));
+it('does not expose thrown server secrets',async()=>{const failing=createBridge({test:async()=>{throw Error('secret-value');}});const response=await failing(new Request('https://test.invalid/api/test'));expect(response.status).toBe(503);expect(await response.text()).not.toContain('secret-value');});

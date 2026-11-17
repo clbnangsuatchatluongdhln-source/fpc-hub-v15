@@ -1,0 +1,138 @@
+/* ============================================================
+   FPC LAB · chat-final.css
+   Override TOÀN BỘ cho chat panel — load sau cùng
+   ============================================================ */
+
+/* ═══ FAB CHAT (nút nổi) ═══ */
+.fab-chat-btn {
+  position: fixed !important;
+  right: 1.5rem !important;
+  bottom: 1.5rem !important;
+  width: 3.5rem !important;
+  height: 3.5rem !important;
+  min-width: 3.5rem !important;
+  min-height: 3.5rem !important;
+  border-radius: 9999px !important;
+  background: #2563eb !important;
+  color: #ffffff !important;
+  z-index: 99999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 8px 16px -6px rgba(37, 99, 235, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  transition: transform 0.2s, background 0.2s !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.fab-chat-btn:hover {
+  background: #1d4ed8 !important;
+  transform: translateY(-3px) !important;
+}
+
+.fab-chat-btn i {
+  font-size: 1.25rem !important;
+  color: #ffffff !important;
+}
+
+/* Ẩn FAB khi chat mở */
+body:has(#chatPanel[data-open="true"]) .fab-chat-btn {
+  display: none !important;
+}
+
+/* ═══ CHAT PANEL — THU NHỎ 600x450 ═══ */
+html[data-theme="light"] #chatPanel,
+html[data-theme="dark"] #chatPanel {
+  position: fixed !important;
+  right: 1.5rem !important;
+  bottom: 5.5rem !important;
+  left: auto !important;
+  top: auto !important;
+  width: min(90vw, 600px) !important;
+  height: min(65dvh, 450px) !important;
+  max-width: 600px !important;
+  max-height: 450px !important;
+  margin: 0 !important;
+  border-radius: 1rem !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  grid-template-columns: unset !important;
+  overflow: hidden !important;
+  transform-origin: bottom right !important;
+}
+
+html[data-theme="light"] #chatPanel {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.25) !important;
+  backdrop-filter: none !important;
+}
+
+html[data-theme="dark"] #chatPanel {
+  background: rgba(10, 5, 25, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.5) !important;
+}
+
+html[data-theme="light"] #chatPanel[data-open="false"],
+html[data-theme="dark"] #chatPanel[data-open="false"] {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  display: flex !important;
+}
+
+html[data-theme="light"] #chatPanel[data-open="true"],
+html[data-theme="dark"] #chatPanel[data-open="true"] {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  display: flex !important;
+}
+
+/* ═══ CỘT TRÁI — THU NHỎ + FIX TABS KHUẤT CHỮ ═══ */
+html[data-theme="light"] #chatPanel .conv-side,
+html[data-theme="dark"] #chatPanel .conv-side {
+  width: 180px !important;
+  flex-shrink: 0 !important;
+}
+
+html[data-theme="light"] #chatPanel .conv-tabs {
+  flex-wrap: wrap !important;
+  overflow: visible !important;
+}
+
+html[data-theme="light"] #chatPanel .conv-tab {
+  padding: 4px 8px !important;
+  font-size: 10px !important;
+  flex: 0 0 auto !important;
+}
+
+html[data-theme="light"] #chatPanel .conv-name {
+  font-size: 12px !important;
+}
+
+html[data-theme="light"] #chatPanel .conv-preview {
+  font-size: 10px !important;
+}
+
+html[data-theme="light"] #chatPanel .conv-meta {
+  display: none !important;
+}
+
+html[data-theme="light"] #chatPanel .conv-search {
+  padding: 6px !important;
+}
+
+html[data-theme="light"] #chatPanel .conv-search input {
+  font-size: 11px !important;
+  padding: 6px 10px 6px 28px !important;
+}
+
+/* ═══ HEADER DRAG CURSOR ═══ */
+#chatPanel .chat-header,
+#chatPanel .conv-side > div:first-child {
+  cursor: move !important;
+}

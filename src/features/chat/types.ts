@@ -3,10 +3,75 @@
    Định nghĩa toàn bộ domain type cho Chat Module.
    ============================================================ */
 
-export type MessageStatus = 'sent' | 'delivered' | 'seen';
+export type MessageStatus = 'sending' | 'sent' | 'delivered' | 'seen' | 'failed';
+export type MessageType =
+  | 'text'
+  | 'media'
+  | 'file'
+  | 'link'
+  | 'sticker'
+  | 'location'
+  | 'card'
+  | 'system'
+  | 'unsupported';
+
+export interface TextContent {
+  text: string;
+}
+export interface MediaContent {
+  url: string;
+  mime: string;
+  width?: number;
+  height?: number;
+  caption?: string;
+}
+export interface FileContent {
+  url: string;
+  name: string;
+  size: number;
+  mime: string;
+}
+export interface LinkContent {
+  url: string;
+  title?: string;
+  description?: string;
+  thumbnail?: string;
+}
+export interface StickerContent {
+  packId: string;
+  stickerId: string;
+}
+export interface LocationContent {
+  lat: number;
+  lng: number;
+  label?: string;
+}
+export interface CardContent {
+  title: string;
+  subtitle?: string;
+  image?: string;
+  action?: string;
+}
+export interface SystemContent {
+  event: string;
+}
+export interface UnsupportedContent {
+  raw: string;
+}
+
+export type ContentPayload =
+  | TextContent
+  | MediaContent
+  | FileContent
+  | LinkContent
+  | StickerContent
+  | LocationContent
+  | CardContent
+  | SystemContent
+  | UnsupportedContent;
 export type ConversationType = 'dm' | 'group' | 'channel';
 export type ConvTab = 'all' | 'unread' | 'group';
-export type RealtimeAction = 'insert' | 'update';
+export type RealtimeAction = 'insert' | 'update' | 'state';
 export type PresenceStatus = 'online' | 'away' | 'offline';
 
 /* ---------- DOMAIN MODELS (client-side, camelCase) ---------- */
@@ -23,9 +88,22 @@ export interface Message {
   created_at: string;
   at?: number;
   time?: string;
+  type: MessageType;
+  content: ContentPayload;
+  clientId: string;
+  serverId?: string;
+  replyToId?: string;
+  mentions?: string[];
+  isEdited: boolean;
+  editedAt?: string;
+  deletedAt?: string;
+  deliveredAt?: string;
+  seenAt?: string;
 }
 
 export interface Conversation {
+  scope?: 'direct' | 'group' | 'department' | 'club';
+  departmentId?: string | null;
   id: string;
   type: ConversationType;
   name?: string;
@@ -64,6 +142,8 @@ export interface ChatState {
 /* ---------- RAW DB ROWS (snake_case, cho Supabase) ---------- */
 
 export interface DbConversation {
+  scope?: 'direct' | 'group' | 'department' | 'club';
+  department_id?: string | null;
   id: string;
   type: ConversationType;
   name: string | null;
@@ -78,6 +158,23 @@ export interface DbConversation {
   last_message_at: string | null;
 }
 
+export interface ConversationState {
+  conversationId: string;
+  isPinned: boolean;
+  isMuted: boolean;
+  isArchived: boolean;
+  version: number;
+}
+
+export interface DbConversationState {
+  user_id: string;
+  conversation_id: string;
+  is_pinned: boolean;
+  is_muted: boolean;
+  is_archived: boolean;
+  version: number;
+}
+
 export interface DbMessage {
   id: string;
   conversation_id: string;
@@ -86,6 +183,19 @@ export interface DbMessage {
   text: string;
   status: MessageStatus | null;
   created_at: string;
+  client_id: string;
+  server_id: string | null;
+  type: MessageType;
+  content: ContentPayload;
+  reply_to_id: string | null;
+  forwarded_from_id: string | null;
+  mentions: string[] | null;
+  system_event_type: string | null;
+  is_edited: boolean;
+  edited_at: string | null;
+  deleted_at: string | null;
+  delivered_at: string | null;
+  seen_at: string | null;
 }
 
 export interface DbProfile {

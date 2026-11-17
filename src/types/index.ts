@@ -10,6 +10,7 @@ export type UserRole = 'super_admin' | 'admin' | 'member';
 export type ApprovalStatus = 'pending' | 'active' | 'rejected';
 
 export interface UserProfile {
+  club_position?: import('../core/access').ClubPosition;
   id: string;
   display_name?: string;
   email?: string;

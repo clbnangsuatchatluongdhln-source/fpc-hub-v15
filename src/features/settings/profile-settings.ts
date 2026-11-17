@@ -9,6 +9,7 @@ import { el, escHtml } from '../../utils';
 import { getAvatarHtml, refreshAvatars } from '../../utils/avatar';
 import { Auth } from '../../core/auth';
 import { supabase } from '../../core/supabase';
+import { bindSettingsMenu } from './settings-menu';
 
 type UploadFn = (file: File) => Promise<string>;
 const uploadImage: UploadFn = async (file) => {
@@ -41,6 +42,22 @@ export function openProfileSettings(): void {
     `;
 
     const body = el('div', { class: 'p-6 space-y-6 overflow-y-auto max-h-[70vh]' });
+
+    // --- PHẦN 0: GIAO DIỆN ---
+    const themeSection = el('div', { class: 'flex items-center justify-between p-4 rounded-xl bg-white/[.02] border border-white/[.05]' });
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    themeSection.innerHTML = `
+      <div>
+        <div class="text-sm font-bold text-white mb-1">Chế độ hiển thị</div>
+        <div class="text-xs text-slate-500">Chuyển đổi giữa giao diện Sáng và Tối</div>
+      </div>
+      <button id="themeToggleBtn" type="button" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 text-sm font-bold transition">
+        <i class="fa-solid ${isLight ? 'fa-moon' : 'fa-sun'} text-xs"></i>
+        <span>${isLight ? 'Tối' : 'Sáng'}</span>
+      </button>
+    `;
+    body.appendChild(themeSection);
+    body.appendChild(el('div', { class: 'border-t border-white/10 my-2' }));
 
     // --- PHẦN 1: THÔNG TIN CÁ NHÂN ---
     const userSection = el('div', { class: 'flex items-start gap-5' });
@@ -216,5 +233,6 @@ export function openProfileSettings(): void {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  document.querySelector('[data-action="open-settings"]')?.addEventListener('click', openProfileSettings);
+  const trigger = document.querySelector<HTMLButtonElement>('[data-action="open-settings"]');
+  if (trigger) bindSettingsMenu(trigger, openProfileSettings);
 });

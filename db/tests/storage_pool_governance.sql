@@ -1,0 +1,127 @@
+BEGIN;
+SELECT set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-000000000001","role":"service_role"}',true);
+SELECT set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001',true);
+CREATE TEMP TABLE storage_test_ids(label text PRIMARY KEY,id uuid NOT NULL DEFAULT gen_random_uuid());
+INSERT INTO storage_test_ids(label) VALUES('owner'),('other'),('pending'),('admin'),('event'),('null_event'),('project'),('ticket'),('expired'),('revoked'),('b2_ticket');
+GRANT SELECT ON storage_test_ids TO authenticated,service_role;
+INSERT INTO auth.users(id,email,raw_user_meta_data)
+SELECT id,'storage-test-'||id::text||'@example.invalid','{"display_name":"Storage test"}'::jsonb FROM storage_test_ids WHERE label IN('owner','other','pending','admin');
+UPDATE public.profiles SET approval_status='active' WHERE id IN(SELECT id FROM storage_test_ids WHERE label IN('owner','other','admin'));
+UPDATE public.profiles SET role='admin' WHERE id=(SELECT id FROM storage_test_ids WHERE label='admin');
+INSERT INTO public.events(id,title,start_time,end_time,visibility,created_by)
+SELECT id,'Storage private test',now(),now()+interval '1 hour','private',(SELECT id FROM storage_test_ids WHERE label='owner') FROM storage_test_ids WHERE label='event';
+INSERT INTO public.events(id,title,start_time,end_time,visibility,created_by)
+SELECT id,'Storage null owner',now(),now()+interval '1 hour','private',NULL FROM storage_test_ids WHERE label='null_event';
+INSERT INTO public.projects(id,name,owner_id)
+SELECT id,'Storage project test',(SELECT id FROM storage_test_ids WHERE label='owner') FROM storage_test_ids WHERE label='project';
+INSERT INTO public.storage_connections(label,provider,env_prefix,bucket,document_priority,capacity_bytes,endpoint_url) VALUES ('Test Tigris','tigris','STORAGE_CONN_SQL_TEST_T','test',1,1000000,'https://test.invalid'),('Test B2','b2','STORAGE_CONN_SQL_TEST_B','test',1,1000000,'https://test.invalid');
+CREATE TEMP TABLE storage_results(label text,passed boolean);
+GRANT ALL ON storage_results TO authenticated,service_role;
+CREATE FUNCTION pg_temp.assert_storage(label text,passed boolean) RETURNS void LANGUAGE plpgsql AS $$
+BEGIN IF passed IS DISTINCT FROM true THEN RAISE EXCEPTION 'Storage assertion failed: %',label; END IF; INSERT INTO storage_results VALUES(label,true); END;$$;
+CREATE FUNCTION pg_temp.deny_storage(label text,command text) RETURNS void LANGUAGE plpgsql AS $$
+DECLARE denied boolean:=false;
+BEGIN BEGIN EXECUTE command; EXCEPTION WHEN insufficient_privilege OR invalid_parameter_value THEN denied:=true; END;
+PERFORM pg_temp.assert_storage(label,denied); END;$$;
+SELECT pg_temp.assert_storage('owner writes own event',fpc_private.storage_parent_access((SELECT id FROM storage_test_ids WHERE label='owner'),(SELECT id FROM storage_test_ids WHERE label='event'),NULL,true));
+SELECT pg_temp.assert_storage('other cannot write event',NOT fpc_private.storage_parent_access((SELECT id FROM storage_test_ids WHERE label='other'),(SELECT id FROM storage_test_ids WHERE label='event'),NULL,true));
+SELECT pg_temp.assert_storage('null owner private event fails closed',NOT fpc_private.storage_parent_access((SELECT id FROM storage_test_ids WHERE label='other'),(SELECT id FROM storage_test_ids WHERE label='null_event'),NULL,true));
+SELECT pg_temp.assert_storage('other cannot read private event',NOT fpc_private.storage_parent_access((SELECT id FROM storage_test_ids WHERE label='other'),(SELECT id FROM storage_test_ids WHERE label='event'),NULL,false));
+SELECT pg_temp.assert_storage('pending cannot use hub',NOT fpc_private.storage_parent_access((SELECT id FROM storage_test_ids WHERE label='pending'),NULL,NULL,true));
+SELECT pg_temp.assert_storage('owner writes own project',fpc_private.storage_parent_access((SELECT id FROM storage_test_ids WHERE label='owner'),NULL,(SELECT id FROM storage_test_ids WHERE label='project'),true));
+SELECT pg_temp.assert_storage('other cannot write project',NOT fpc_private.storage_parent_access((SELECT id FROM storage_test_ids WHERE label='other'),NULL,(SELECT id FROM storage_test_ids WHERE label='project'),true));
+SELECT pg_temp.assert_storage('missing parent denied',NOT fpc_private.storage_parent_access((SELECT id FROM storage_test_ids WHERE label='owner'),gen_random_uuid(),NULL,true));
+SELECT pg_temp.assert_storage('admin retains parent access',fpc_private.storage_parent_access((SELECT id FROM storage_test_ids WHERE label='admin'),(SELECT id FROM storage_test_ids WHERE label='event'),NULL,true));
+SELECT public.storage_issue_upload(jsonb_build_object('id',(SELECT id FROM storage_test_ids WHERE label='ticket'),'owner_id',(SELECT id FROM storage_test_ids WHERE label='owner'),'provider','tigris','bucket','test','storage_path',(SELECT storage_path FROM public.storage_uploads WHERE id=(SELECT id FROM storage_test_ids WHERE label='ticket')),'name','test.txt','mime_type','text/plain','kind','document','size',3,'event_id',(SELECT id FROM storage_test_ids WHERE label='event')));
+SELECT pg_temp.deny_storage('wrong owner cannot finalize',$q$ SELECT public.storage_finalize_upload((SELECT id FROM storage_test_ids WHERE label='ticket'),(SELECT id FROM storage_test_ids WHERE label='other'),'wrong') $q$);
+SELECT pg_temp.deny_storage('wrong object cannot finalize',$q$ SELECT public.storage_finalize_upload((SELECT id FROM storage_test_ids WHERE label='ticket'),(SELECT id FROM storage_test_ids WHERE label='owner'),'wrong') $q$);
+SELECT public.storage_finalize_upload((SELECT id FROM storage_test_ids WHERE label='ticket'),(SELECT id FROM storage_test_ids WHERE label='owner'),(SELECT storage_path FROM public.storage_uploads WHERE id=(SELECT id FROM storage_test_ids WHERE label='ticket')));
+SELECT public.storage_finalize_upload((SELECT id FROM storage_test_ids WHERE label='ticket'),(SELECT id FROM storage_test_ids WHERE label='owner'),(SELECT storage_path FROM public.storage_uploads WHERE id=(SELECT id FROM storage_test_ids WHERE label='ticket')));
+SELECT pg_temp.assert_storage('replay creates exactly one metadata row',(SELECT count(*)=1 FROM public.files WHERE id=(SELECT id FROM storage_test_ids WHERE label='ticket')));
+SELECT pg_temp.assert_storage('metadata derives owner parent provider',(SELECT uploaded_by=(SELECT id FROM storage_test_ids WHERE label='owner') AND event_id=(SELECT id FROM storage_test_ids WHERE label='event') AND storage_provider='tigris' AND size=3 FROM public.files WHERE id=(SELECT id FROM storage_test_ids WHERE label='ticket')));
+SELECT public.storage_issue_upload(jsonb_build_object('id',(SELECT id FROM storage_test_ids WHERE label='b2_ticket'),'owner_id',(SELECT id FROM storage_test_ids WHERE label='owner'),'provider','b2','bucket','test','storage_path',(SELECT storage_path FROM public.storage_uploads WHERE id=(SELECT id FROM storage_test_ids WHERE label='b2_ticket')),'name','b2.txt','mime_type','text/plain','kind','document','size',3));
+SELECT pg_temp.deny_storage('B2 cannot finalize without a verified version',$q$ SELECT public.storage_finalize_upload((SELECT id FROM storage_test_ids WHERE label='b2_ticket'),(SELECT id FROM storage_test_ids WHERE label='owner'),(SELECT storage_path FROM public.storage_uploads WHERE id=(SELECT id FROM storage_test_ids WHERE label='b2_ticket'))) $q$);
+SELECT pg_temp.deny_storage('B2 rejects malformed version identity',$q$ SELECT public.storage_finalize_upload((SELECT id FROM storage_test_ids WHERE label='b2_ticket'),(SELECT id FROM storage_test_ids WHERE label='owner'),(SELECT storage_path FROM public.storage_uploads WHERE id=(SELECT id FROM storage_test_ids WHERE label='b2_ticket')),'bad?version') $q$);
+SELECT public.storage_finalize_upload((SELECT id FROM storage_test_ids WHERE label='b2_ticket'),(SELECT id FROM storage_test_ids WHERE label='owner'),(SELECT storage_path FROM public.storage_uploads WHERE id=(SELECT id FROM storage_test_ids WHERE label='b2_ticket')),'test_version_1234567890');
+SELECT pg_temp.assert_storage('B2 pins version in file and session',(SELECT storage_version='test_version_1234567890' FROM public.files WHERE id=(SELECT id FROM storage_test_ids WHERE label='b2_ticket')) AND (SELECT storage_version='test_version_1234567890' FROM public.storage_uploads WHERE id=(SELECT id FROM storage_test_ids WHERE label='b2_ticket')));
+SELECT public.storage_finalize_upload((SELECT id FROM storage_test_ids WHERE label='b2_ticket'),(SELECT id FROM storage_test_ids WHERE label='owner'),(SELECT storage_path FROM public.storage_uploads WHERE id=(SELECT id FROM storage_test_ids WHERE label='b2_ticket')),'replayed_version_1234567890');
+SELECT pg_temp.assert_storage('B2 replay cannot change accepted version',(SELECT storage_version='test_version_1234567890' FROM public.files WHERE id=(SELECT id FROM storage_test_ids WHERE label='b2_ticket')));
+INSERT INTO public.storage_uploads(id,owner_id,provider,bucket,storage_path,name,mime_type,kind,size,expires_at)
+SELECT id,(SELECT id FROM storage_test_ids WHERE label='owner'),'tigris','test','storage-test/'||id::text,'expired.txt','text/plain','document',3,now()-interval '1 second' FROM storage_test_ids WHERE label='expired';
+SELECT pg_temp.deny_storage('expired ticket cannot finalize',$q$ SELECT public.storage_finalize_upload((SELECT id FROM storage_test_ids WHERE label='expired'),(SELECT id FROM storage_test_ids WHERE label='owner'),(SELECT storage_path FROM public.storage_uploads WHERE id=(SELECT id FROM storage_test_ids WHERE label='expired'))) $q$);
+UPDATE public.profiles SET approval_status='rejected' WHERE id=(SELECT id FROM storage_test_ids WHERE label='owner');
+SELECT pg_temp.deny_storage('revoked approval cannot finalize replay',$q$ SELECT public.storage_finalize_upload((SELECT id FROM storage_test_ids WHERE label='ticket'),(SELECT id FROM storage_test_ids WHERE label='owner'),(SELECT storage_path FROM public.storage_uploads WHERE id=(SELECT id FROM storage_test_ids WHERE label='ticket'))) $q$);
+UPDATE public.profiles SET approval_status='active' WHERE id=(SELECT id FROM storage_test_ids WHERE label='owner');
+SELECT set_config('request.jwt.claims',json_build_object('sub',(SELECT id FROM storage_test_ids WHERE label='owner'),'role','authenticated')::text,true);
+SELECT set_config('request.jwt.claim.sub',(SELECT id::text FROM storage_test_ids WHERE label='owner'),true);
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.deny_storage('direct owner metadata insert denied',$q$ INSERT INTO public.files(name,storage_path,uploaded_by) VALUES('forged','forged/'||gen_random_uuid()::text,auth.uid()) $q$);
+SELECT pg_temp.deny_storage('direct null owner insert denied',$q$ INSERT INTO public.files(name,storage_path,uploaded_by) VALUES('forged','forged/'||gen_random_uuid()::text,NULL) $q$);
+SELECT pg_temp.deny_storage('direct metadata update denied',$q$ UPDATE public.files SET storage_path='forged' WHERE id=(SELECT id FROM storage_test_ids WHERE label='ticket') $q$);
+SELECT pg_temp.deny_storage('client cannot issue trusted upload',$q$ SELECT public.storage_issue_upload('{}'::jsonb) $q$);
+SELECT pg_temp.deny_storage('client cannot finalize trusted upload',$q$ SELECT public.storage_finalize_upload(gen_random_uuid(),auth.uid(),'forged') $q$);
+SELECT pg_temp.deny_storage('client cannot insert ticket',$q$ INSERT INTO public.storage_uploads(id) VALUES(gen_random_uuid()) $q$);
+SELECT pg_temp.assert_storage('owner reads authorized metadata',(SELECT count(*)=1 FROM public.files WHERE id=(SELECT id FROM storage_test_ids WHERE label='ticket')));
+RESET ROLE;
+SELECT set_config('request.jwt.claims',json_build_object('sub',(SELECT id FROM storage_test_ids WHERE label='other'),'role','authenticated')::text,true);
+SELECT set_config('request.jwt.claim.sub',(SELECT id::text FROM storage_test_ids WHERE label='other'),true);
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.assert_storage('other cannot read private attachment metadata',(SELECT count(*)=0 FROM public.files WHERE id=(SELECT id FROM storage_test_ids WHERE label='ticket')));
+RESET ROLE;
+
+SELECT set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001',true);
+UPDATE public.profiles SET approval_status='active' WHERE id=(SELECT id FROM storage_test_ids WHERE label='owner');
+SELECT pg_temp.assert_storage('connection persisted on metadata',(SELECT storage_connection_id IS NOT NULL FROM public.files WHERE id=(SELECT id FROM storage_test_ids WHERE label='ticket')));
+SELECT pg_temp.deny_storage('used connection cannot be repointed',$q$ UPDATE public.storage_connections SET bucket='forged' WHERE env_prefix='STORAGE_CONN_SQL_TEST_T' $q$);
+UPDATE public.storage_connections SET capacity_bytes=10,reported_used_bytes=9 WHERE env_prefix='STORAGE_CONN_SQL_TEST_T';
+CREATE TEMP TABLE pool_result AS SELECT (public.storage_issue_upload(jsonb_build_object('id',gen_random_uuid(),'owner_id',(SELECT id FROM storage_test_ids WHERE label='owner'),'candidate_ids',(SELECT jsonb_agg(id) FROM public.storage_connections WHERE env_prefix IN('STORAGE_CONN_SQL_TEST_T','STORAGE_CONN_SQL_TEST_B')),'name','pool.txt','mime_type','text/plain','kind','document','size',3))).*;
+SELECT pg_temp.assert_storage('full first account falls through to second',(SELECT provider='b2' AND bucket='test' FROM pool_result));
+SELECT pg_temp.assert_storage('rotation preserves existing connection',(SELECT f.storage_connection_id=c.id FROM public.files f JOIN public.storage_connections c ON c.env_prefix='STORAGE_CONN_SQL_TEST_T' WHERE f.id=(SELECT id FROM storage_test_ids WHERE label='ticket')));
+CREATE FUNCTION pg_temp.deny_quota(command text) RETURNS boolean LANGUAGE plpgsql AS $$BEGIN BEGIN EXECUTE command;EXCEPTION WHEN raise_exception THEN RETURN true;END;RETURN false;END;$$;
+INSERT INTO public.storage_user_limits(user_id,daily_count) SELECT id,0 FROM storage_test_ids WHERE label='owner';
+SELECT pg_temp.assert_storage('user count quota blocks issue',pg_temp.deny_quota($q$ SELECT public.storage_issue_upload(jsonb_build_object('id',gen_random_uuid(),'owner_id',(SELECT id FROM storage_test_ids WHERE label='owner'),'provider','b2','bucket','test','name','a.txt','mime_type','text/plain','kind','document','size',3)) $q$));
+UPDATE public.storage_user_limits SET daily_count=50 WHERE user_id=(SELECT id FROM storage_test_ids WHERE label='owner');
+SELECT pg_temp.assert_storage('daily ledger survives ticket removal',(SELECT count(*)>0 FROM public.storage_upload_usage WHERE user_id=(SELECT id FROM storage_test_ids WHERE label='owner')));
+UPDATE public.events SET start_time=now()-interval '100 days',end_time=now()-interval '99 days' WHERE id=(SELECT id FROM storage_test_ids WHERE label='event');
+INSERT INTO public.storage_retention_jobs(source_event_id,event_id,title,event_snapshot) SELECT id,id,title,to_jsonb(e) FROM public.events e WHERE id=(SELECT id FROM storage_test_ids WHERE label='event');
+SELECT pg_temp.deny_storage('member cannot approve deletion',$q$ SELECT public.storage_retention_action((SELECT id FROM storage_test_ids WHERE label='owner'),(SELECT id FROM public.storage_retention_jobs WHERE source_event_id=(SELECT id FROM storage_test_ids WHERE label='event')),'approve','related') $q$);
+SELECT pg_temp.deny_storage('private event cannot notify whole club',$q$ SELECT public.storage_retention_action((SELECT id FROM storage_test_ids WHERE label='admin'),(SELECT id FROM public.storage_retention_jobs WHERE source_event_id=(SELECT id FROM storage_test_ids WHERE label='event')),'approve','club') $q$);
+SELECT public.storage_retention_action((SELECT id FROM storage_test_ids WHERE label='admin'),(SELECT id FROM public.storage_retention_jobs WHERE source_event_id=(SELECT id FROM storage_test_ids WHERE label='event')),'approve','related');
+SELECT pg_temp.assert_storage('approval waits seven days',(SELECT state='scheduled' AND delete_after>=now()+interval '7 days' FROM public.storage_retention_jobs WHERE source_event_id=(SELECT id FROM storage_test_ids WHERE label='event')));
+SELECT pg_temp.assert_storage('owner receives upcoming deletion notice',EXISTS(SELECT 1 FROM public.notifications WHERE user_id=(SELECT id FROM storage_test_ids WHERE label='owner') AND event_id=(SELECT id FROM storage_test_ids WHERE label='event') AND title='Sự kiện sắp bị xóa'));
+SELECT pg_temp.assert_storage('unrelated user sees no private deletion notice',NOT EXISTS(SELECT 1 FROM public.notifications WHERE user_id=(SELECT id FROM storage_test_ids WHERE label='other') AND event_id=(SELECT id FROM storage_test_ids WHERE label='event')));
+SELECT pg_temp.deny_storage('worker cannot delete early',$q$ SELECT public.storage_retention_claim((SELECT id FROM public.storage_retention_jobs WHERE source_event_id=(SELECT id FROM storage_test_ids WHERE label='event'))) $q$);
+SELECT public.storage_retention_action((SELECT id FROM storage_test_ids WHERE label='owner'),(SELECT id FROM public.storage_retention_jobs WHERE source_event_id=(SELECT id FROM storage_test_ids WHERE label='event')),'hold','related','Still needed');
+SELECT pg_temp.assert_storage('hold cancels deletion deadline',(SELECT state='retained' AND delete_after IS NULL FROM public.storage_retention_jobs WHERE source_event_id=(SELECT id FROM storage_test_ids WHERE label='event')));
+SELECT pg_temp.deny_storage('worker cannot claim held event',$q$ SELECT public.storage_retention_claim((SELECT id FROM public.storage_retention_jobs WHERE source_event_id=(SELECT id FROM storage_test_ids WHERE label='event'))) $q$);
+SELECT pg_temp.assert_storage('non-admin overview hides other accounts',(public.storage_overview((SELECT id FROM storage_test_ids WHERE label='owner'))->'connections')='[]'::jsonb AND jsonb_array_length(public.storage_overview((SELECT id FROM storage_test_ids WHERE label='owner'))->'users')=1);
+SELECT public.storage_retention_action((SELECT id FROM storage_test_ids WHERE label='admin'),(SELECT id FROM public.storage_retention_jobs WHERE source_event_id=(SELECT id FROM storage_test_ids WHERE label='event')),'approve','related');
+UPDATE public.storage_retention_jobs SET delete_after=now()-interval '1 minute' WHERE source_event_id=(SELECT id FROM storage_test_ids WHERE label='event');
+UPDATE public.events SET title='Changed event' WHERE id=(SELECT id FROM storage_test_ids WHERE label='event');
+SELECT public.storage_retention_claim((SELECT id FROM public.storage_retention_jobs WHERE source_event_id=(SELECT id FROM storage_test_ids WHERE label='event')));
+SELECT pg_temp.assert_storage('changed event requires fresh approval',(SELECT state='cancelled' FROM public.storage_retention_jobs WHERE source_event_id=(SELECT id FROM storage_test_ids WHERE label='event')));
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.deny_storage('client cannot modify connection',$q$ UPDATE public.storage_connections SET write_enabled=false $q$);
+SELECT pg_temp.deny_storage('client cannot modify quota',$q$ UPDATE public.storage_user_limits SET daily_count=10000 $q$);
+SELECT pg_temp.deny_storage('client cannot approve through trusted RPC',$q$ SELECT public.storage_retention_action(auth.uid(),gen_random_uuid(),'approve','club') $q$);
+RESET ROLE;
+
+
+INSERT INTO storage_test_ids(label) VALUES('public_event');
+INSERT INTO public.events(id,title,start_time,end_time,visibility,created_by) SELECT id,'Public retention fixture',now()-interval '100 days',now()-interval '99 days','public',(SELECT id FROM storage_test_ids WHERE label='owner') FROM storage_test_ids WHERE label='public_event';
+INSERT INTO public.storage_retention_jobs(source_event_id,event_id,title,event_snapshot) SELECT id,id,title,to_jsonb(e) FROM public.events e WHERE id=(SELECT id FROM storage_test_ids WHERE label='public_event');
+SELECT public.storage_retention_action((SELECT id FROM storage_test_ids WHERE label='admin'),(SELECT id FROM public.storage_retention_jobs WHERE source_event_id=(SELECT id FROM storage_test_ids WHERE label='public_event')),'approve','club');
+SELECT pg_temp.assert_storage('public club notice reaches unrelated active member',EXISTS(SELECT 1 FROM public.notifications WHERE event_id=(SELECT id FROM storage_test_ids WHERE label='public_event') AND user_id=(SELECT id FROM storage_test_ids WHERE label='other')));
+SELECT pg_temp.assert_storage('pending user receives no club notice',NOT EXISTS(SELECT 1 FROM public.notifications WHERE event_id=(SELECT id FROM storage_test_ids WHERE label='public_event') AND user_id=(SELECT id FROM storage_test_ids WHERE label='pending')));
+SELECT fpc_private.storage_notice((SELECT id FROM storage_test_ids WHERE label='owner'),'fixture-dedupe','Notice','Body');
+SELECT fpc_private.storage_notice((SELECT id FROM storage_test_ids WHERE label='owner'),'fixture-dedupe','Notice','Body');
+SELECT pg_temp.assert_storage('notice retry does not duplicate',(SELECT count(*)=1 FROM public.notifications WHERE user_id=(SELECT id FROM storage_test_ids WHERE label='owner') AND storage_notice_key='fixture-dedupe'));
+UPDATE public.storage_retention_jobs SET delete_after=now()-interval '1 minute' WHERE source_event_id=(SELECT id FROM storage_test_ids WHERE label='public_event');
+SELECT public.storage_retention_claim((SELECT id FROM public.storage_retention_jobs WHERE source_event_id=(SELECT id FROM storage_test_ids WHERE label='public_event')));
+SELECT pg_temp.deny_storage('claimed event cannot change mid cleanup',$q$ UPDATE public.events SET title='tampered' WHERE id=(SELECT id FROM storage_test_ids WHERE label='public_event') $q$);
+SELECT public.storage_retention_finish((SELECT id FROM public.storage_retention_jobs WHERE source_event_id=(SELECT id FROM storage_test_ids WHERE label='public_event')));
+SELECT pg_temp.assert_storage('approved due empty fixture event is removed',NOT EXISTS(SELECT 1 FROM public.events WHERE id=(SELECT id FROM storage_test_ids WHERE label='public_event')));
+SELECT pg_temp.assert_storage('deleted job retains audit identity',(SELECT state='deleted' AND event_id IS NULL FROM public.storage_retention_jobs WHERE source_event_id=(SELECT id FROM storage_test_ids WHERE label='public_event')));
+
+SELECT count(*) AS checks_passed,bool_and(passed) AS all_passed FROM storage_results;
+ROLLBACK;

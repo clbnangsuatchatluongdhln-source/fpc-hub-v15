@@ -3,7 +3,7 @@
    ============================================================ */
 import { supabase } from '../../core/supabase';
 import type {
-  Task, Subtask, Submission, TaskSubmission, TaskHistoryInput, TaskHistory,
+  Task, Subtask, Submission, TaskSubmission, TaskHistory,
   Profile, Department, ProjectOption, CreateTaskInput, UpdateTaskInput,
   CreateSubtaskInput, UploadedFile, FinalFile, ScoreboardEntry, TaskStatus,
 } from './types';
@@ -425,23 +425,6 @@ export async function rejectTaskSubmission(params: {
 /* ─────────────────────────────────────────────
    HISTORY
    ───────────────────────────────────────────── */
-export async function logHistory(input: TaskHistoryInput): Promise<void> {
-  try {
-    const { data: authData } = await supabase.auth.getUser();
-    await supabase.from('task_history').insert({
-      task_id: input.task_id,
-      action: input.action,
-      actor_id: authData?.user?.id ?? null,
-      old_status: input.old_status ?? null,
-      new_status: input.new_status ?? null,
-      note: input.note ?? '',
-      metadata: input.metadata ?? {},
-    });
-  } catch (err) {
-    console.warn('[logHistory] warning:', err);
-  }
-}
-
 export async function fetchTaskHistory(taskId: string): Promise<TaskHistory[]> {
   const { data, error } = await supabase
     .from('task_history')

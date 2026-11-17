@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="vi" data-theme="dark">
+<html lang="vi" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -18,6 +18,9 @@
 <link rel="stylesheet" href="/css/tailwind-built.css?v=2">
 <link rel="stylesheet" href="/css/style.css?v=2">
 <link rel="stylesheet" href="/css/theme-light.css?v=2">
+<link rel="stylesheet" href="/css/auth-unified.css?v=1">
+<link rel="stylesheet" href="/css/dashboard-light.css?v=1">
+<link rel="stylesheet" href="/css/chat-final.css?v=1">
 </head>
 
 <body>
@@ -29,9 +32,22 @@
   <div class="auth-split">
     <div class="auth-form-side">
       <div class="auth-form-wrap">
-        <div class="flex items-center gap-3 mb-10">
-          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-pink-500 via-violet-500 to-cyan-400 flex items-center justify-center shadow-neon-pink"><i class="fa-solid fa-cube text-white"></i></div>
-          <div><div class="font-black tracking-widest grad text-xl leading-none">FPC HUB</div><div class="text-[10px] text-slate-500 font-bold tracking-[.25em] mt-1">COMMAND OS</div></div>
+        <div class="flex items-center gap-4 mb-8">
+          <!-- Logo CLB (Đã tách nền) -->
+          <img src="/logo-clb.png" alt="Logo CLB Năng suất Chất lượng" class="w-14 h-14 object-contain drop-shadow-sm" />
+          
+          <!-- Cụm Text -->
+          <div class="flex flex-col justify-center">
+            <!-- Tên App: Đậm hơn (font-black) và to hơn -->
+            <span class="text-2xl font-black tracking-tight text-white leading-tight">
+              FPC <span class="text-blue-500">HUB</span>
+            </span>
+            
+            <!-- Slogan mới: Thay thế Command OS -->
+            <span class="text-[11px] font-bold tracking-[0.15em] text-slate-400 uppercase mt-0.5">
+              Năng Suất - Chất Lượng - Bứt Phá
+            </span>
+          </div>
         </div>
         <div class="auth-tabs mb-8">
           <button id="authTabLogin" class="auth-tab active" data-auth-tab="login">Đăng nhập</button>
@@ -124,12 +140,19 @@
 
   <!-- SIDEBAR -->
   <aside id="sidebar" class="fixed md:relative z-40 inset-y-0 left-0 w-64 shrink-0 glass border-r border-white/[.06] -translate-x-full md:translate-x-0 transition-transform duration-300 flex flex-col" aria-label="Điều hướng">
-    <div class="h-16 flex items-center px-5 gap-3 border-b border-white/[.06]">
-      <!-- LOGO CLB: Sẽ được JS tự động render nếu có logo_url -->
-      <div data-avatar="club" class="shrink-0"></div>
+    <div class="h-16 flex items-center px-4 gap-3 border-b border-white/[.06]">
+      <img src="/logo-clb.png" alt="Logo CLB" class="w-10 h-10 object-contain drop-shadow-sm shrink-0" />
       
-      <div class="flex-1 min-w-0"><div class="font-black tracking-widest grad text-sm leading-none">FPC HUB</div><div class="text-[9px] text-slate-500 font-bold tracking-[.2em] mt-1">TIMELINE · V15</div></div>
-      <button data-action="close-sidebar" class="md:hidden w-8 h-8 rounded-lg hover:bg-white/10 text-slate-400 flex items-center justify-center" aria-label="Đóng"><i class="fa-solid fa-xmark text-sm"></i></button>
+      <div class="flex flex-col justify-center min-w-0 flex-1 mt-0.5">
+        <span class="text-sm font-extrabold tracking-tight text-white leading-none truncate">
+          FPC <span class="text-blue-500">HUB</span>
+        </span>
+        <span class="text-[9px] font-bold tracking-[0.2em] text-slate-500 uppercase mt-1 truncate">
+          Timeline · V15
+        </span>
+      </div>
+      
+      <button data-action="close-sidebar" class="md:hidden w-8 h-8 rounded-lg hover:bg-white/10 text-slate-400 flex items-center justify-center shrink-0" aria-label="Đóng"><i class="fa-solid fa-xmark text-sm"></i></button>
     </div>
 
     <nav class="p-3 space-y-4 mt-1 overflow-y-auto scrollbar flex-1 min-h-0" aria-label="Mục chính">
@@ -157,7 +180,7 @@
           <button data-action="toggle-chat" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent text-sm font-semibold text-left text-slate-400 hover:text-white hover:bg-white/5">
             <i class="fa-solid fa-comments w-5 text-center text-emerald-400"></i><span>Tin nhắn</span>
           </button>
-          <button data-action="open-resource-hub" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent text-sm font-semibold text-left text-slate-400 hover:text-white hover:bg-white/5">
+          <button data-nav="files" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent text-sm font-semibold text-left text-slate-400 hover:text-white hover:bg-white/5">
             <i class="fa-solid fa-folder-open w-5 text-center text-orange-400"></i><span>Kho tài nguyên</span>
           </button>
         </div>
@@ -190,9 +213,6 @@
         </div>
       </div>
       <div class="flex items-center gap-2 shrink-0">
-        <button data-action="open-create" class="bg-gradient-to-r from-pink-600 to-violet-600 hover:opacity-95 text-white px-3 md:px-4 py-2 rounded-full text-sm font-bold shadow-neon-pink transition-transform active:scale-[0.97] flex items-center gap-2" title="Tạo sự kiện hoặc dự án">
-          <i class="fa-solid fa-plus text-xs"></i><span class="hidden sm:inline">Tạo mới</span>
-        </button>
       </div>
     </header>
 
@@ -217,6 +237,12 @@
           </div>
           <div id="projectList" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
         </section>
+
+        <!-- SECTION: DEPARTMENTS -->
+        <section id="departmentsSection" class="hidden space-y-4"></section>
+
+        <!-- SECTION: TASKS -->
+        <section id="tasksSection" class="hidden space-y-4"></section>
 
         <!-- SECTION: ADMIN -->
         <section id="adminSection" class="hidden space-y-4">
@@ -259,8 +285,10 @@
   </main>
 </div>
 
+
+<!-- CHAT PANEL -->
 <!-- CHAT FAB & PANEL -->
-<button data-action="toggle-chat" class="fixed right-5 bottom-5 z-[75] w-14 h-14 rounded-full bg-gradient-to-br from-pink-500 via-violet-500 to-cyan-500 text-white shadow-neon-pink border border-white/25 flex items-center justify-center text-xl hover:scale-[1.06] active:scale-95 transition-transform" aria-label="Chat"><i class="fa-solid fa-comment-dots"></i></button>
+
 
 <section id="chatPanel" data-open="false" data-mobile-view="list" class="glass shadow-2xl border border-white/[.08]" role="dialog" aria-modal="true" aria-labelledby="chatTitle">
   <aside class="conv-side">

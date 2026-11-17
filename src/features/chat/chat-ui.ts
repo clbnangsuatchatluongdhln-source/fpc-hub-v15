@@ -14,12 +14,12 @@ import type {
 } from './types';
 
 export const CONV_COLORS: Record<string, string> = {
-  pink: 'from-pink-500 to-rose-500',
-  violet: 'from-violet-500 to-purple-500',
+  pink: 'from-blue-400 to-blue-600',
+  violet: 'from-blue-500 to-cyan-500',
   cyan: 'from-cyan-500 to-blue-500',
   amber: 'from-amber-500 to-orange-500',
   emerald: 'from-emerald-500 to-teal-500',
-  indigo: 'from-indigo-500 to-violet-500',
+  indigo: 'from-blue-600 to-indigo-500',
 };
 
 function getUserById(users: ChatUser[], id: string | undefined): ChatUser | null {
@@ -135,10 +135,10 @@ export function renderConvAvatar(
   const members = getConvMembers(conv, users).slice(0, 4);
   wrap.classList.add('multi');
   const palette = [
-    'from-pink-500 to-rose-500',
-    'from-violet-500 to-purple-500',
-    'from-cyan-500 to-blue-500',
-    'from-amber-500 to-orange-500',
+    'from-blue-400 to-blue-600',
+    'from-cyan-400 to-blue-500',
+    'from-blue-500 to-cyan-500',
+    'from-indigo-400 to-blue-500',
   ];
   members.forEach((m, i) => {
     const cell = document.createElement('div');
@@ -276,7 +276,7 @@ export function renderChatHeader(
   info.className = 'min-w-0 flex-1';
 
   const name = document.createElement('div');
-  name.className = 'font-black text-sm text-white truncate';
+  name.className = 'font-black text-sm text-slate-800 truncate';
   name.textContent = getConvName(conv, users, myId);
 
   const status = document.createElement('div');
@@ -298,17 +298,17 @@ export function renderChatHeader(
     }
   } else if (conv.type === 'group') {
     status.className += ' text-slate-500';
-    status.textContent = `${conv.members.length} thành viên`;
+    status.textContent = conv.scope === 'department' ? 'Chat nội bộ ban · chỉ thành viên được xem' : `${conv.members.length} thành viên`;
   } else {
     status.className += ' text-slate-500';
-    status.textContent = 'Kênh chung · toàn team';
+    status.textContent = 'Thông báo CLB · tất cả thành viên được xem';
   }
 
   info.append(name, status);
   box.append(av, info);
 
   // NÚT CÀI ĐẶT CHO NHÓM (3 chấm)
-  if (conv.type === 'group') {
+  if (conv.type === 'group' && conv.scope !== 'department') {
     const settingsBtn = document.createElement('button');
     settingsBtn.className = 'w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition flex items-center justify-center shrink-0 ml-2';
     settingsBtn.setAttribute('data-action', 'open-chat-info');
@@ -392,7 +392,7 @@ export function renderMessages(
       const showAv = !prev || prev.senderId !== m.senderId;
       if (showAv) {
         const av = document.createElement('div');
-        av.className = 'msg-av bg-gradient-to-br from-violet-500 to-purple-500';
+        av.className = 'msg-av bg-gradient-to-br from-blue-500 to-cyan-500';
         av.textContent = (m.sender_name || '?').charAt(0).toUpperCase();
         row.append(av);
       } else {

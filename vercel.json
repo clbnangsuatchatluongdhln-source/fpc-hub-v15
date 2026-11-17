@@ -2,6 +2,10 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
     {
+      "path": "/api/storage-cleanup",
+      "schedule": "0 2 * * *"
+    },
+    {
       "path": "/api/heartbeat",
       "schedule": "0 0 */3 * *"
     }

@@ -687,3 +687,410 @@ html[data-theme="light"] #settingsModal .bg-black\/20 {
 html[data-theme="light"] #settingsModal .border-white\/\[\.06\] {
   border-color: rgba(0, 0, 0, 0.08);
 }
+
+/* ═══════════════════════════════════════════════════════════
+   A7 — AUTH PAGE POLISH (LIGHT MODE - GEMINI FEEDBACK)
+   ═══════════════════════════════════════════════════════════ */
+
+/* Background */
+html[data-theme="light"] #authPage { background: #f8fafc; }
+html[data-theme="light"] .auth-form-side { background: #f8fafc; }
+html[data-theme="light"] .auth-branding-side { background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%); }
+html[data-theme="light"] .auth-glow-1 { background: radial-gradient(circle, rgba(59,130,246,0.15), transparent 60%); }
+html[data-theme="light"] .auth-glow-2 { background: radial-gradient(circle, rgba(147,197,253,0.2), transparent 60%); }
+
+/* Typography */
+html[data-theme="light"] .auth-headline { color: #0f172a; }
+html[data-theme="light"] .auth-subtext { color: #64748b; }
+html[data-theme="light"] .auth-feature-title { color: #0f172a; }
+html[data-theme="light"] .auth-feature-desc { color: #64748b; }
+
+/* Tabs (Đăng nhập / Đăng ký) */
+html[data-theme="light"] .auth-tabs { background: #f1f5f9; border-color: #e2e8f0; }
+html[data-theme="light"] .auth-tab { color: #64748b; }
+html[data-theme="light"] .auth-tab.active { background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); color: #0f172a; }
+
+/* Inputs */
+html[data-theme="light"] .auth-input-wrap input { background: #f8fafc; border-color: #e2e8f0; color: #0f172a; }
+html[data-theme="light"] .auth-input-wrap input:focus { background: #ffffff; box-shadow: 0 0 0 2px #3b82f6; }
+html[data-theme="light"] .auth-input-wrap i { color: #94a3b8; }
+
+/* Button Đăng nhập */
+html[data-theme="light"] .auth-submit { background: #2563eb; box-shadow: none; border-radius: 0.75rem; color: #ffffff; }
+html[data-theme="light"] .auth-submit:hover { background: #1d4ed8; }
+
+/* Link Quên mật khẩu */
+html[data-theme="light"] .auth-form a.text-pink-400 { color: #3b82f6; }
+html[data-theme="light"] .auth-form a.text-pink-400:hover { text-decoration: underline; }
+
+/* Badge "Hệ thống đang hoạt động" */
+html[data-theme="light"] .auth-branding-badge { background: rgba(255, 255, 255, 0.8); color: #059669; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+html[data-theme="light"] .auth-branding-badge .auth-dot { background: #059669; }
+
+/* Feature icons */
+html[data-theme="light"] .auth-feature-icon { background: #ffffff; color: #2563eb; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+/* Footer version */
+html[data-theme="light"] .auth-footer-version { color: #94a3b8; }
+
+/* Checkbox "Ghi nhớ đăng nhập" */
+html[data-theme="light"] .auth-checkbox + span { color: #475569; }
+
+/* ═══════════════════════════════════════════════════════════
+   A8 — AUTH PAGE POLISH V2 (GEMINI FINAL)
+   ═══════════════════════════════════════════════════════════ */
+
+/* --- 1. LAYOUT & BACKGROUND --- */
+html[data-theme="light"] #authPage { background: #ffffff; }
+html[data-theme="light"] .auth-form-side { background: #ffffff; padding: 2rem; }
+html[data-theme="light"] .auth-branding-side { 
+  background: #f8fafc; /* Xám xanh cực nhạt */
+  background-image: none; /* Xóa gradient cũ */
+}
+/* Ẩn hoàn toàn đốm sáng để sạch sẽ */
+html[data-theme="light"] .auth-glow-1,
+html[data-theme="light"] .auth-glow-2 { display: none; }
+
+html[data-theme="light"] .auth-branding-content {
+  max-width: 32rem; /* max-w-lg */
+  margin: 0 auto;
+  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+}
+
+/* --- 2. TYPOGRAPHY --- */
+/* Xóa text gradient, chuyển thành xanh dương đơn sắc */
+html[data-theme="light"] .auth-headline { color: #0f172a; font-weight: 800; line-height: 1.2; }
+html[data-theme="light"] .auth-headline .grad {
+  background: none;
+  -webkit-background-clip: unset;
+  -webkit-text-fill-color: #2563eb;
+  color: #2563eb;
+}
+
+html[data-theme="light"] .auth-subtext { color: #475569; font-size: 1rem; margin-top: 1rem; }
+
+/* --- 3. TABS --- */
+html[data-theme="light"] .auth-tabs {
+  background: #f1f5f9;
+  padding: 0.25rem;
+  border-radius: 0.75rem;
+  border: none;
+}
+html[data-theme="light"] .auth-tab {
+  color: #64748b;
+  border-radius: 0.5rem;
+  font-weight: 600;
+}
+html[data-theme="light"] .auth-tab.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* --- 4. INPUTS & LABELS --- */
+html[data-theme="light"] .auth-field label {
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+html[data-theme="light"] .auth-input-wrap {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+}
+html[data-theme="light"] .auth-input-wrap:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+html[data-theme="light"] .auth-input-wrap input {
+  background: transparent;
+  color: #0f172a;
+  padding: 0.75rem 1rem;
+}
+html[data-theme="light"] .auth-input-wrap i { color: #94a3b8; }
+
+/* --- 5. BUTTONS & LINKS --- */
+html[data-theme="light"] .auth-submit {
+  background: #2563eb;
+  color: #ffffff;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  font-weight: 600;
+  box-shadow: none;
+}
+html[data-theme="light"] .auth-submit:hover { background: #1d4ed8; }
+
+/* Link Quên mật khẩu */
+html[data-theme="light"] .auth-form a.text-pink-400 {
+  color: #64748b;
+  font-size: 0.875rem;
+}
+html[data-theme="light"] .auth-form a.text-pink-400:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+/* Checkbox */
+html[data-theme="light"] .auth-checkbox + span { color: #475569; font-size: 0.875rem; }
+
+/* --- 6. BADGE & FEATURE LIST --- */
+html[data-theme="light"] .auth-branding-badge {
+  background: #f0fdf4; /* Xanh lá cực nhạt */
+  color: #15803d; /* Xanh lá đậm */
+  border: 1px solid #bbf7d0;
+  border-radius: 9999px;
+  padding: 0.25rem 0.75rem;
+}
+html[data-theme="light"] .auth-branding-badge .auth-dot { background: #15803d; }
+
+html[data-theme="light"] .auth-feature-list { gap: 1.5rem; margin-top: 3rem; }
+html[data-theme="light"] .auth-feature-icon {
+  width: 3rem;
+  height: 3rem;
+  background: #ffffff;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  color: #2563eb;
+  border-radius: 0.75rem;
+}
+html[data-theme="light"] .auth-feature-title { color: #1e293b; font-weight: 600; }
+html[data-theme="light"] .auth-feature-desc { color: #64748b; font-size: 0.875rem; }
+
+/* --- 7. FOOTER TEXT (V15.0) --- */
+html[data-theme="light"] .auth-footer-version {
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   A9 — AUTH AMBIENT GLOW (LIGHT MODE - TAILWIND ARBITRARY)
+   ═══════════════════════════════════════════════════════════ */
+
+/* Đảm bảo container cha cắt phần loang và có nền xanh cực nhạt */
+html[data-theme="light"] .auth-branding-side {
+  background-color: #f8fbff;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Đảm bảo nội dung chữ/icon luôn nổi lên trên cùng (z-index) */
+html[data-theme="light"] .auth-branding-content {
+  position: relative;
+  z-index: 10;
+}
+
+/* Đốm 1: Góc trên trái (Xanh dương nhạt) */
+html[data-theme="light"] .auth-glow-1 {
+  display: block;
+  position: absolute;
+  top: -8rem;
+  left: -8rem;
+  width: 30rem;
+  height: 30rem;
+  background: rgba(147, 197, 253, 0.4); /* blue-300/40 */
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Đốm 2: Góc dưới phải (Xanh lơ mờ) */
+html[data-theme="light"] .auth-glow-2 {
+  display: block;
+  position: absolute;
+  bottom: -8rem;
+  right: -5rem;
+  width: 35rem;
+  height: 35rem;
+  background: rgba(165, 243, 252, 0.4); /* cyan-200/40 */
+  border-radius: 50%;
+  filter: blur(140px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Đốm 3: Điểm nhấn ở giữa (Indigo nhạt) - Dùng ::before của container */
+html[data-theme="light"] .auth-branding-side::before {
+  content: "";
+  position: absolute;
+  top: 33%;
+  left: 25%;
+  width: 20rem;
+  height: 20rem;
+  background: rgba(224, 231, 255, 0.5); /* indigo-100/50 */
+  border-radius: 50%;
+  filter: blur(100px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   A10 — LOGIN PAGE: GLASS CARD + GRID PATTERN + SEGMENTED TAB
+   ═══════════════════════════════════════════════════════════ */
+
+/* 1. NỀN LƯỚI KỸ THUẬT (GRID PATTERN) cho cột form-side */
+html[data-theme="light"] .auth-form-side {
+  background-color: #f8fbff;
+  background-image:
+    linear-gradient(to right, #e2e8f0 1px, transparent 1px),
+    linear-gradient(to bottom, #e2e8f0 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* 2. ĐÓNG KHUNG FORM BẰNG GLASS CARD */
+html[data-theme="light"] .auth-form-wrap {
+  max-width: 28rem; /* max-w-md */
+  width: 100%;
+  padding: 2rem 2.5rem;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 20px 60px -15px rgba(37, 99, 235, 0.1);
+  border-radius: 2rem;
+  position: relative;
+  z-index: 10;
+}
+
+/* 3. SEGMENTED CONTROL TABS (iOS style) */
+html[data-theme="light"] .auth-tabs {
+  background: rgba(203, 213, 225, 0.5); /* slate-200/50 */
+  padding: 0.375rem;
+  border-radius: 1rem;
+  display: flex;
+  gap: 0;
+  border: none;
+  box-shadow: none;
+}
+
+html[data-theme="light"] .auth-tab {
+  flex: 1;
+  border-radius: 0.75rem;
+  padding: 0.625rem 0;
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: #475569;
+  background: transparent;
+  transition: all 0.2s ease;
+  border: none;
+  box-shadow: none;
+  text-align: center;
+}
+
+html[data-theme="light"] .auth-tab.active {
+  background: #ffffff;
+  color: #2563eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* 4. SỬA MÀU "QUÊN MẬT KHẨU?" */
+html[data-theme="light"] .auth-form a.text-pink-400,
+html[data-theme="light"] #authForgotBtn {
+  color: #64748b !important;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: color 0.2s;
+}
+
+html[data-theme="light"] .auth-form a.text-pink-400:hover,
+html[data-theme="light"] #authForgotBtn:hover {
+  color: #2563eb !important;
+  text-decoration: none;
+}
+
+/* 5. TINH CHỈNH INPUT TRONG CARD (cho sạch hơn) */
+html[data-theme="light"] .auth-input-wrap {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+html[data-theme="light"] .auth-input-wrap:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+/* 6. NÚT ĐĂNG NHẬP */
+html[data-theme="light"] .auth-submit {
+  background: #2563eb;
+  color: #ffffff;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  box-shadow: 0 4px 14px -2px rgba(37, 99, 235, 0.3);
+  transition: all 0.2s;
+}
+
+html[data-theme="light"] .auth-submit:hover {
+  background: #1d4ed8;
+  box-shadow: 0 6px 20px -2px rgba(37, 99, 235, 0.4);
+}
+
+/* 7. LOGO TRONG CARD (căn giữa) */
+html[data-theme="light"] .auth-form-wrap > div:first-child {
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+/* 8. FOOTER "Điều khoản sử dụng" */
+html[data-theme="light"] .auth-form-wrap > p:last-child {
+  color: #94a3b8;
+  font-size: 0.6875rem;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   A11 — FIX LỖI FORM LOGIN (ICON ĐÈ CHỮ, LOGO MÉO, CHECKBOX)
+   ═══════════════════════════════════════════════════════════ */
+
+/* 1. Fix icon đè chữ: Trả lại padding trái/phải cho input */
+html[data-theme="light"] .auth-input-wrap input {
+  padding: 12px 44px 12px 42px !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+html[data-theme="light"] .auth-input-wrap input:focus {
+  background: #ffffff !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+}
+
+/* Đảm bảo icon nằm đúng vị trí */
+html[data-theme="light"] .auth-input-wrap > i:first-child {
+  left: 14px !important;
+  color: #94a3b8 !important;
+}
+
+html[data-theme="light"] .auth-input-wrap:focus-within > i:first-child {
+  color: #3b82f6 !important;
+}
+
+/* 2. Fix logo bị méo (đảm bảo tỷ lệ 1:1) */
+html[data-theme="light"] .auth-form-wrap img,
+img.auth-logo {
+  aspect-ratio: 1 / 1;
+  object-fit: contain !important;
+  border-radius: 50%; /* Bo tròn logo nếu cần */
+}
+
+/* 3. Fix checkbox (màu xanh dương thay vì hồng) */
+html[data-theme="light"] .auth-checkbox {
+  accent-color: #2563eb !important;
+}
+
+html[data-theme="light"] .auth-checkbox + span {
+  color: #475569 !important;
+  font-size: 0.875rem;
+}

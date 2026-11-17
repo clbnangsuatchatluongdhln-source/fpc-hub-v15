@@ -1,0 +1,78 @@
+html[data-theme="light"] {
+  color-scheme:light;
+  --app-canvas:#f7f8fa; --app-surface:#fff; --app-subtle:#f0f2f5;
+  --app-text:#252a34; --app-muted:#747c89; --app-line:#e7e9ee;
+  --app-accent:#4169b2; --app-accent-soft:#edf2fa; --app-own-message:#eaf0fa;
+  --app-thumb:#65718540; --app-on-accent:#fff; --workspace-surface:var(--app-surface);
+}
+html[data-theme="dark"] {
+  color-scheme:dark;
+  --app-canvas:#181a1f; --app-surface:#202329; --app-subtle:#292d34;
+  --app-text:#e4e7ed; --app-muted:#a1a8b5; --app-line:#323740;
+  --app-accent:#9ab8eb; --app-accent-soft:#2b384d; --app-own-message:#2c3b52;
+  --app-thumb:#c0c9d540; --app-on-accent:#172238; --workspace-surface:var(--app-surface);
+}
+html[data-theme] body { background:var(--app-canvas)!important; color:var(--app-text); }
+html[data-theme] .bg-subtle { display:none!important; }
+html[data-theme] #mainAppContainer { color:var(--app-text); background:var(--app-canvas); }
+html[data-theme] #mainAppContainer > #sidebar { width:190px; background:var(--app-surface)!important; border-right:1px solid var(--app-line)!important; border-radius:0!important; backdrop-filter:none; }
+html[data-theme] #mainAppContainer > #sidebar > div { background:transparent!important; border-color:var(--app-line)!important; }
+html[data-theme] #mainAppContainer > main > header { background:var(--app-surface)!important; border-color:var(--app-line)!important; backdrop-filter:none; }
+html[data-theme] #mainAppContainer > main > header.glass { border-radius:0!important; }
+html[data-theme] #mainAppContainer #sidebarUserRole { color:var(--app-muted)!important; background:var(--app-subtle)!important; font-weight:500!important; letter-spacing:.3px; }
+html[data-theme] #mainAppContainer #pageTitle { font-size:20px!important; font-weight:600!important; letter-spacing:-.4px; color:var(--app-text)!important; }
+html[data-theme] #mainAppContainer #clock, html[data-theme] #mainAppContainer #clock + span { display:none; }
+html[data-theme] #mainAppContainer #dateLabel { color:var(--app-muted)!important; font-size:11px; }
+html[data-theme] #mainAppContainer .nav-item { background:transparent!important; color:var(--app-muted)!important; border:0!important; border-radius:8px!important; font-size:13px!important; font-weight:500!important; box-shadow:none!important; padding:10px 12px!important; }
+html[data-theme] #mainAppContainer .nav-item:hover { background:var(--app-subtle)!important; color:var(--app-text)!important; }
+html[data-theme] #mainAppContainer .nav-item.nav-active { color:var(--app-accent)!important; background:var(--app-accent-soft)!important; }
+html[data-theme] #mainAppContainer .nav-item i { color:inherit!important; font-size:15px!important; }
+html[data-theme] #mainAppContainer [data-action="open-create"] { background:var(--app-accent)!important; color:var(--app-surface)!important; border-radius:8px!important; box-shadow:none!important; font-size:13px!important; font-weight:500!important; }
+html[data-theme] #mainAppContainer :is(.glass,.glass-soft,.glass-card,.cal-panel) { background:var(--app-surface)!important; border-color:var(--app-line)!important; box-shadow:none!important; backdrop-filter:none!important; border-radius:10px!important; }
+html[data-theme] #mainAppContainer .font-black { font-weight:600!important; }
+html[data-theme] #mainAppContainer :is(.text-white,.text-slate-800) { color:var(--app-text)!important; }
+html[data-theme] #mainAppContainer :is(.text-slate-400,.text-slate-500) { color:var(--app-muted)!important; }
+html[data-theme] #mainAppContainer button[data-action="open-create"] { color:var(--app-on-accent)!important; }
+html[data-theme] #mainAppContainer :is(input,textarea,select) { accent-color:var(--app-accent); }
+html[data-theme] #mainAppContainer :is(button,input,textarea,select):focus-visible { outline:2px solid var(--app-accent); outline-offset:2px; }
+html[data-theme] #mainAppContainer .organization-tabs { border-color:var(--app-line); }
+html[data-theme] #mainAppContainer .organization-tabs button[aria-selected="true"] { color:var(--app-accent); background:var(--app-accent-soft); }
+html[data-theme] #mainAppContainer :is(.workspace-chat-open,.chat-notifications > button) { color:var(--app-muted); background:transparent; border:1px solid var(--app-line); border-radius:8px; }
+html[data-theme] #mainAppContainer #calWrapper { gap:12px!important; }
+html[data-theme] #mainAppContainer #calWrapper > div:first-child { background:var(--app-surface)!important; border:0!important; box-shadow:none!important; border-radius:8px!important; padding:8px 10px!important; }
+html[data-theme] #mainAppContainer #calTitle { color:var(--app-text)!important; font-size:15px!important; font-weight:600!important; }
+html[data-theme] #mainAppContainer #calBody { background:var(--app-surface)!important; border:1px solid var(--app-line)!important; border-radius:8px!important; box-shadow:none!important; }
+html[data-theme] #mainAppContainer #calBody [class*="text-[8px]"],
+html[data-theme] #mainAppContainer #calBody [class*="text-[9px]"] { font-size:11px; }
+html[data-theme] #mainAppContainer #calWrapper .calendar-sidebar > .cal-panel { background:transparent!important; border:0!important; box-shadow:none!important; padding:14px 10px!important; }
+html[data-theme] #mainAppContainer #calFilterList label { color:var(--app-muted)!important; }
+html[data-theme] #mainAppContainer #calFilterList label:has(input:checked) { color:var(--app-text)!important; }
+html[data-theme] #mainAppContainer #calFilterList label span:last-child { color:inherit!important; font-size:12px!important; font-weight:400!important; }
+html[data-theme] #mainAppContainer #calLegendStrip { display:none!important; }
+html[data-theme] #mainAppContainer #calViewSwitcher { background:var(--app-subtle)!important; border:0!important; border-radius:7px!important; }
+html[data-theme] #mainAppContainer #calViewSwitcher button { background:transparent!important; color:var(--app-muted)!important; font-weight:500!important; }
+html[data-theme] #mainAppContainer #calViewSwitcher button[aria-pressed="true"] { color:var(--app-text)!important; background:var(--app-surface)!important; box-shadow:0 1px 3px #0000000d!important; }
+html[data-theme] #mainAppContainer :is(#calTodayBtn,#calPrevBtn,#calNextBtn,#calYearSelect,#calHoursToggle) { color:var(--app-text)!important; border:1px solid var(--app-line)!important; background:transparent!important; box-shadow:none!important; font-size:12px!important; }
+html[data-theme] #mainAppContainer #chatPanel { background:var(--app-surface)!important; color:var(--app-text)!important; border:0!important; border-left:1px solid var(--app-line)!important; }
+html[data-theme] #mainAppContainer #chatPanel .workspace-chat-toolbar { background:var(--app-surface); border-color:var(--app-line); color:var(--app-muted); }
+html[data-theme] #mainAppContainer #chatPanel .workspace-chat-toolbar button:hover { color:var(--app-text); }
+html[data-theme] #mainAppContainer #chatPanel :is(.chat-header,.conv-side,.chat-input-wrap) { background:var(--app-surface)!important; border-color:var(--app-line)!important; }
+html[data-theme] #mainAppContainer #chatPanel .conv-item { border-radius:0!important; background:transparent!important; color:var(--app-text)!important; }
+html[data-theme] #mainAppContainer #chatPanel .conv-item[aria-current="true"] { background:var(--app-accent-soft)!important; }
+html[data-theme] #mainAppContainer #chatPanel .conv-item:hover { background:var(--app-subtle)!important; }
+html[data-theme] #mainAppContainer #chatPanel .conv-search { background:var(--app-subtle)!important; border:0!important; border-radius:8px!important; }
+html[data-theme] #mainAppContainer #chatPanel .conv-tab { color:var(--app-muted)!important; font-weight:500!important; }
+html[data-theme] #mainAppContainer #chatPanel .conv-tab.active { color:var(--app-accent)!important; background:var(--app-accent-soft)!important; }
+html[data-theme] #mainAppContainer #chatPanel #messageList { background:var(--app-canvas)!important; }
+html[data-theme] #mainAppContainer #chatPanel .msg-bubble { background:var(--app-surface)!important; color:var(--app-text)!important; border:1px solid var(--app-line)!important; box-shadow:none!important; border-radius:12px!important; }
+html[data-theme] #mainAppContainer #chatPanel .msg-row.mine .msg-bubble { background:var(--app-own-message)!important; border-color:transparent!important; }
+html[data-theme] #mainAppContainer #messageInput { background:var(--app-subtle)!important; color:var(--app-text)!important; border:0!important; border-radius:10px!important; }
+html[data-theme] #mainAppContainer #chatPanel .send-btn { background:var(--app-accent)!important; box-shadow:none!important; color:var(--app-on-accent)!important; }
+html[data-theme] #mainAppContainer #chatPanel .send-btn:disabled { opacity:.4; }
+html[data-theme] #mainAppContainer :is(#calBody,.scrollbar) { scrollbar-width:thin; scrollbar-color:var(--app-thumb) transparent; }
+html[data-theme] #mainAppContainer :is(#calBody,.scrollbar)::-webkit-scrollbar { width:7px!important; height:7px!important; }
+html[data-theme] #mainAppContainer :is(#calBody,.scrollbar)::-webkit-scrollbar-track { background:transparent!important; }
+html[data-theme] #mainAppContainer :is(#calBody,.scrollbar)::-webkit-scrollbar-thumb { background:var(--app-thumb)!important; border-radius:10px!important; border:0!important; }
+html[data-theme] #mainAppContainer :is(#calBody,.scrollbar)::-webkit-scrollbar-thumb:hover { background:var(--app-muted)!important; }
+html[data-theme] #mainAppContainer #calBody::-webkit-scrollbar-corner { background:transparent; }
+@media(prefers-reduced-motion:reduce) { #mainAppContainer * { scroll-behavior:auto!important; } }

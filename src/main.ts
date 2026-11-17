@@ -4,13 +4,23 @@ import { initAuthListener, handleLogout, Auth } from './core/auth';
 import { Toast } from './ui/toast';
 import { Modal } from './ui/modal';
 import { initChatFeature, destroyChatFeature } from './features/chat';
-import { startClock } from './core/ui-interactions'; // Chỉ dùng để chạy đồng hồ
-import './features/settings/profile-settings'; 
+import { startClock } from './core/ui-interactions';
+import { initRouter } from './core/router';
+import { registerAllFeatures } from './app/routes';
+import { createAppServices } from './app/create-services';
+import { initTheme } from './core/theme';
+import { canManageClub } from './core/access';
+import './app/workspace.css';
+import './app/minimal-theme.css';
+import { initWorkspaceShell } from './app/workspace-shell';
+import './features/settings/profile-settings';
+
+// Apply theme sớm nhất có thể để tránh flash sai theme
+initTheme();
 
 window.Toast = Toast;
 window.Modal = Modal;
 
-/* ─── Global error boundary ─────────────────────────────── */
 window.addEventListener('error', (e) => {
   console.error('[FATAL]', e.error ?? e.message);
 });
@@ -18,13 +28,7 @@ window.addEventListener('unhandledrejection', (e) => {
   console.error('[FATAL ASYNC]', e.reason);
 });
 
-const PAGE_IDS = [
-  'authLoading',
-  'authPage',
-  'mainAppContainer',
-  'pendingPage',
-  'rejectedPage',
-] as const;
+const PAGE_IDS = ['authLoading', 'authPage', 'mainAppContainer', 'pendingPage', 'rejectedPage'] as const;
 
 function byId<T extends HTMLElement = HTMLElement>(id: string): T | null {
   return document.getElementById(id) as T | null;
@@ -43,8 +47,6 @@ function showOnly(targetId: string): void {
   if (targetId !== 'authLoading') byId('authLoading')?.remove();
 }
 
-/* ─── Calendar lazy-load helpers ────────────────────────── */
-
 type CalendarModule = typeof import('./features/calendar');
 let calendarModulePromise: Promise<CalendarModule> | null = null;
 
@@ -59,29 +61,6 @@ function loadCalendarModule(): Promise<CalendarModule> {
   return calendarModulePromise;
 }
 
-async function initCalendarSafe(): Promise<void> {
-  try {
-    const m = await loadCalendarModule();
-    await m.initCalendarFeature({
-      onQuickUpload: async (eventId) => {
-        Toast.show(`Đã gọi Quick Upload cho sự kiện: ${eventId}`, { type: 'success' });
-      },
-      onItemClick: (item) => {
-        console.log('[calendar] item click:', item.type, item.id);
-      },
-    });
-    
-    // Đảm bảo section hiển thị
-    const timeline = document.getElementById('timelineSection');
-    if (timeline) timeline.classList.remove('hidden');
-    
-    console.log('[main] ✅ Calendar init OK');
-  } catch (err) {
-    console.error('[main] Calendar init failed:', err);
-    Toast.show('Module Lịch không tải được — Xem Console (F12)', { type: 'error', timeout: 6000 });
-  }
-}
-
 async function destroyCalendarSafe(): Promise<void> {
   try {
     const m = await loadCalendarModule();
@@ -89,16 +68,13 @@ async function destroyCalendarSafe(): Promise<void> {
   } catch { /* silent */ }
 }
 
-/* ─── Navigation Binding ────────────────────────────────── */
-// Hàm này kết nối nút bấm Sidebar HTML với hàm navigate() của Calendar
 async function bindNavigation(): Promise<void> {
   if (document.body.dataset.navBound === '1') return;
   document.body.dataset.navBound = '1';
 
-  document.body.addEventListener('click', async (e) => {
+  document.body.addEventListener('click', (e) => {
     const target = e.target as HTMLElement;
-    
-    // Xử lý đóng/mở sidebar trên mobile
+
     if (target.closest('[data-action="open-sidebar"]')) {
       document.getElementById('sidebar')?.classList.remove('-translate-x-full');
       document.getElementById('mobileOverlay')?.classList.remove('hidden');
@@ -108,20 +84,22 @@ async function bindNavigation(): Promise<void> {
       document.getElementById('mobileOverlay')?.classList.add('hidden');
     }
 
-    // Xử lý chuyển Tab (Gọi navigate của Calendar)
     const navBtn = target.closest('[data-nav]') as HTMLElement | null;
     if (navBtn && navBtn.dataset.nav) {
-      try {
-        const m = await loadCalendarModule();
-        m.navigate(navBtn.dataset.nav); // Gọi hàm navigate của bạn
-      } catch (err) {
-        console.warn('Chưa load được module Calendar:', err);
-      }
+      const view = navBtn.dataset.nav;
+      const pathMap: Record<string, string> = {
+        timeline: '/',
+        projects: '/projects',
+        departments: '/departments',
+        admin: '/admin',
+        tasks: '/tasks',
+        files: '/files',
+      };
+      const path = pathMap[view] ?? '/';
+      window.location.hash = path;
     }
   });
 }
-
-/* ─── Route ────────────────────────────────────────────── */
 
 export async function routeFromAuth(): Promise<void> {
   const user = Auth.user;
@@ -136,14 +114,35 @@ export async function routeFromAuth(): Promise<void> {
   const status = Auth.profile?.approval_status;
 
   if (status === 'active') {
+    initWorkspaceShell();
+    const management = canManageClub(Auth.profile);
+    document.querySelectorAll<HTMLElement>('[data-nav="departments"]').forEach(button => {
+      button.classList.toggle('hidden', !management);
+      const label = button.querySelector('span');
+      if (label) label.textContent = 'Tổ chức & quản trị';
+    });
+    document.getElementById('navAdminBtn')?.classList.add('hidden');
+    if (!management && ['/admin','/departments'].includes(window.location.hash.replace(/^#/, ''))) {
+      window.location.hash = '/';
+    }
     showOnly('mainAppContainer');
-    
-    // Kích hoạt đồng hồ và binding
+
     startClock();
     void bindNavigation();
 
+    if (document.body.dataset.routerReady !== '1') {
+      document.body.dataset.routerReady = '1';
+      registerAllFeatures();
+      const services = createAppServices();
+      const container = document.getElementById('mainScroll');
+      if (container) {
+        initRouter({ container, services });
+      } else {
+        console.error('[main] Không tìm thấy #mainScroll');
+      }
+    }
+
     void initChatFeature();
-    void initCalendarSafe();
     return;
   }
 
@@ -164,8 +163,6 @@ export async function routeFromAuth(): Promise<void> {
   void destroyCalendarSafe();
   showOnly('authPage');
 }
-
-/* ─── Bootstrap ────────────────────────────────────────── */
 
 function ensureLoadingEl(): void {
   if (byId('authLoading')) return;
@@ -191,16 +188,37 @@ async function handleLogoutAndRoute(): Promise<void> {
   await routeFromAuth();
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function bootstrap(): void {
   ensureLoadingEl();
+
+  const fallbackTimer = window.setTimeout(() => {
+    if (document.getElementById('authLoading')) {
+      console.warn('[main] Auth fallback timeout — hiển thị trang login');
+      showOnly('authPage');
+    }
+  }, 8000);
+
   try {
-    initAuthListener(() => routeFromAuth());
+    initAuthListener(() => {
+      window.clearTimeout(fallbackTimer);
+      void routeFromAuth();
+    });
     setupAuthUI({
-      onAuthEvent: routeFromAuth,
+      onAuthEvent: () => {
+        window.clearTimeout(fallbackTimer);
+        void routeFromAuth();
+      },
       handleLogoutUi: handleLogoutAndRoute,
     });
   } catch (err) {
     console.error('[main] ❌ Bootstrap FAILED:', err);
+    window.clearTimeout(fallbackTimer);
     showOnly('authPage');
   }
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', bootstrap);
+} else {
+  bootstrap();
+}

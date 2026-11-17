@@ -1,0 +1,13 @@
+.account-settings-menu { position:fixed; z-index:1000; width:272px; max-width:calc(100vw - 16px); padding:5px; border:1px solid var(--app-line); border-radius:10px; background:var(--app-surface); color:var(--app-text); box-shadow:0 6px 24px #00000018; font-size:13px; }
+.account-settings-menu[hidden] { display:none; }
+.account-settings-menu > button { display:flex; align-items:center; gap:10px; width:100%; min-height:40px; padding:10px; background:transparent; border:0; border-radius:6px; color:inherit; text-align:left; cursor:pointer; font:inherit; }
+.account-settings-menu > button:hover { background:var(--app-subtle); }
+.account-settings-menu i { width:18px; text-align:center; }
+.settings-menu-account .fa-chevron-right { margin-left:auto; font-size:10px; color:var(--app-muted); }
+.settings-menu-appearance { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px; margin:3px 0; border-bottom:1px solid var(--app-line); }
+.settings-menu-appearance > div:first-child { display:flex; align-items:center; gap:10px; }
+.settings-theme-options { display:flex; gap:2px; padding:2px; border-radius:6px; background:var(--app-subtle); }
+.settings-theme-options button { flex:1; padding:5px 7px; border:0; border-radius:4px; background:transparent; color:var(--app-muted); cursor:pointer; font:inherit; font-size:12px; white-space:nowrap; }
+.settings-theme-options button[aria-pressed="true"] { background:var(--app-surface); color:var(--app-text); box-shadow:0 1px 4px #00000015; }
+.account-settings-menu > .settings-menu-logout { color:#dc5757; }
+.account-settings-menu button:focus-visible { outline:2px solid var(--app-accent); outline-offset:2px; }

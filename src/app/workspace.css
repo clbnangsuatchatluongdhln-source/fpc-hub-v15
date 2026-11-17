@@ -1,0 +1,56 @@
+.organization-tabs { display:flex; gap:8px; padding:14px 20px; border-bottom:1px solid #cbd5e144; }
+.organization-tabs button { padding:9px 14px; border-radius:8px; font-size:13px; }
+.organization-tabs button[aria-selected="true"] { color:#2563eb; background:#2563eb15; }
+.club-position-select { padding:7px 9px; border:1px solid #94a3b844; border-radius:8px; background:transparent; color:inherit; font-size:12px; }
+#calWrapper .calendar-sidebar { width:190px; }
+#calWrapper #calFilterList { display:flex; flex-direction:column; gap:10px; }
+#calWrapper #calFilterList label { padding:6px 2px; }
+#calWrapper #calFilterList input { appearance:auto!important; width:15px; height:15px; }
+html[data-theme] #calWrapper #calFilterList label input { display:inline-block!important; flex-shrink:0; }
+html[data-theme] #calWrapper #calFilterList label::before { display:none!important; }
+html[data-theme] #calWrapper #calFilterList label,
+html[data-theme] #calWrapper #calFilterList label:has(input:checked) { border:0!important; background:transparent!important; padding:6px 0!important; opacity:1!important; }
+html[data-theme] #calWrapper { height:calc(100dvh - 112px)!important; display:flex!important; flex-direction:column!important; }
+html[data-theme] #calWrapper > div:nth-child(2) { flex:1!important; min-height:0!important; }
+html[data-theme] #calWrapper #calBody { flex:1!important; min-height:0!important; }
+#calWrapper #calFilterList label span:last-child { font-size:12px; }
+#calWrapper #calFilterList label span:nth-child(2) { display:none; }
+#calWrapper #calBody { overflow:auto!important; }
+#calBody[data-view="week"] > div { min-width:900px; }
+#calBody[data-view="month"] > div { min-width:760px; }
+#calBody[data-view="day"] > div { min-width:450px; }
+#calBody[data-view="week"] > div > div:first-child > div:first-child,
+#calBody[data-view="week"] > div > div:nth-child(2) > div:first-child { position:sticky; left:0; z-index:4; background:var(--workspace-surface,#fff); }
+html[data-theme="dark"] { --workspace-surface:#101725; }
+.workspace-chat-open { padding:8px 12px; border:1px solid #94a3b844; border-radius:8px; font-size:12px; }
+.workspace-chat-toolbar { display:flex; align-items:center; gap:8px; padding:10px; background:var(--workspace-surface,#fff); border-bottom:1px solid #94a3b833; grid-column:1/-1; }
+.workspace-chat-toolbar button { padding:6px 8px; font-size:12px; }
+.workspace-chat-toolbar button:first-child { margin-right:auto; }
+#mainAppContainer > #sidebar { width:180px; }
+#mainAppContainer > main { min-width:0; }
+#mainAppContainer > main > header { height:64px; }
+html[data-theme] #mainAppContainer #chatPanel[data-open="false"] { display:none!important; }
+html[data-theme] #mainAppContainer #chatPanel[data-open="true"] { position:relative!important; inset:auto!important; transform:none!important; width:360px!important; min-width:300px!important; max-width:none!important; height:100%!important; max-height:none!important; flex-shrink:0!important; border-radius:0!important; box-shadow:none!important; display:grid!important; grid-template-columns:minmax(0,1fr)!important; grid-template-rows:auto minmax(0,1fr)!important; opacity:1!important; visibility:visible!important; }
+html[data-theme] #mainAppContainer #chatPanel .conv-side,
+html[data-theme] #mainAppContainer #chatPanel .chat-main { width:100%!important; min-width:0!important; height:100%!important; max-height:none!important; }
+html[data-theme] #mainAppContainer #chatPanel[data-layout="dock"][data-mobile-view="chat"] .conv-side { display:none!important; }
+html[data-theme] #mainAppContainer #chatPanel[data-layout="dock"][data-mobile-view="list"] .chat-main { display:none!important; }
+html[data-theme] #mainAppContainer #chatPanel[data-layout="dock"] .back-btn { display:flex!important; }
+html[data-theme] #mainAppContainer #chatPanel[data-layout="full"][data-open="true"] { flex:1!important; width:auto!important; grid-template-columns:280px minmax(0,1fr)!important; }
+html[data-theme] #mainAppContainer #chatPanel[data-layout="full"] .conv-side,
+html[data-theme] #mainAppContainer #chatPanel[data-layout="full"] .chat-main { display:flex!important; }
+#mainAppContainer:has(#chatPanel[data-layout="full"][data-open="true"]) > main { display:none; }
+body:has(#mainAppContainer.hidden) .fab-chat-btn { display:none!important; }
+@media(min-width:801px) { #mainAppContainer:has(#chatPanel[data-open="true"]) .calendar-sidebar { width:150px; } }
+@media(max-width:800px) {
+  html[data-theme] #mainAppContainer #chatPanel[data-open="true"] { position:absolute!important; inset:0!important; width:100%!important; z-index:100!important; }
+  html[data-theme] #mainAppContainer #chatPanel[data-layout="full"][data-open="true"] { grid-template-columns:minmax(0,1fr)!important; }
+  html[data-theme] #mainAppContainer #chatPanel[data-mobile-view="list"] .chat-main { display:none!important; }
+  html[data-theme] #mainAppContainer #chatPanel[data-mobile-view="chat"] .conv-side { display:none!important; }
+  #calWrapper > div:nth-child(2) { flex-direction:column; }
+  #calWrapper .calendar-sidebar { width:100%; overflow:visible; }
+  #calWrapper .calendar-sidebar > div:nth-child(2) { display:none; }
+  #calWrapper #calFilterList { flex-direction:row; flex-wrap:wrap; }
+  #calWrapper .calendar-sidebar .cal-panel { padding:8px 12px; }
+  #calWrapper .calendar-sidebar h3 { display:none; }
+}

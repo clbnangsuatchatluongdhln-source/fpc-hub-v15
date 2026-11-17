@@ -1,0 +1,84 @@
+/* ============================================================
+   FPC LAB · auth-unified.css
+   Layout 1 cột duy nhất cho trang Đăng nhập (bỏ split-screen)
+   Áp dụng cho cả Dark và Light
+   ============================================================ */
+
+/* 1. Ẩn hoàn toàn cột phải (Branding) */
+.auth-branding-side {
+  display: none !important;
+}
+
+/* 2. Bỏ grid chia đôi, chuyển thành block */
+.auth-split {
+  display: block !important;
+  min-height: 100vh;
+}
+
+/* 3. Căn giữa form trong toàn màn hình */
+.auth-form-side {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 4. Giới hạn chiều rộng form cho đẹp */
+.auth-form-wrap {
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+  z-index: 10;
+}
+
+/* 5. Hiệu ứng loang màu nền (Ambient Glow) - Dùng ::before của form-side */
+.auth-form-side::before {
+  content: "";
+  position: absolute;
+  top: -10%;
+  left: -10%;
+  width: 50vw;
+  height: 50vw;
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.auth-form-side::after {
+  content: "";
+  position: absolute;
+  bottom: -10%;
+  right: -10%;
+  width: 50vw;
+  height: 50vw;
+  border-radius: 50%;
+  filter: blur(140px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* --- Màu loang cho LIGHT MODE --- */
+html[data-theme="light"] .auth-form-side {
+  background-color: #f8fbff;
+}
+html[data-theme="light"] .auth-form-side::before {
+  background: rgba(147, 197, 253, 0.4); /* blue-300/40 */
+}
+html[data-theme="light"] .auth-form-side::after {
+  background: rgba(165, 243, 252, 0.4); /* cyan-200/40 */
+}
+
+/* --- Màu loang cho DARK MODE (giữ tông tím/hồng) --- */
+html[data-theme="dark"] .auth-form-side {
+  background-color: #05030a;
+}
+html[data-theme="dark"] .auth-form-side::before {
+  background: rgba(236, 72, 153, 0.15); /* pink */
+}
+html[data-theme="dark"] .auth-form-side::after {
+  background: rgba(139, 92, 246, 0.18); /* violet */
+}

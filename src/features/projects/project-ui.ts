@@ -2,7 +2,7 @@ import { Modal } from '@/ui/modal';
 import { Toast } from '@/ui/toast';
 import { el, clamp, fmtBytes, fileIcon } from '@/utils';
 import { Store } from '@/core/store';
-import { getB2DownloadUrl } from '@/core/b2-client';
+import { getFileDownloadUrl } from '@/core/storage/legacy-files';
 import {
   uploadFile,
   saveFileMetadata,
@@ -625,17 +625,10 @@ function buildProjectFileRow(f: ProjectFile): HTMLElement {
   
   dlBtn.addEventListener('click', async () => {
     try {
-      if (f.kind === 'image' || f.kind === 'video') {
-        if (f.public_url) window.open(f.public_url, '_blank', 'noopener');
-      } else {
-        dlBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i>';
-        // FIX TS(2345)
-        if (!f.storage_path) throw new Error('Không tìm thấy đường dẫn file');
-
-        const signedUrl = await getB2DownloadUrl(f.storage_path);
-        window.open(signedUrl, '_blank', 'noopener');
-        dlBtn.innerHTML = '<i class="fa-solid fa-download text-xs"></i>';
-      }
+      dlBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i>';
+      const signedUrl = await getFileDownloadUrl(f);
+      window.open(signedUrl, '_blank', 'noopener');
+      dlBtn.innerHTML = '<i class="fa-solid fa-download text-xs"></i>';
     } catch {
       Toast.show('Lỗi khi lấy link tải file', { type: 'error' });
       dlBtn.innerHTML = '<i class="fa-solid fa-download text-xs"></i>';
@@ -1017,7 +1010,7 @@ async function processOneProjectFile(file: File, projectId: string): Promise<boo
     statusEl.textContent = 'Đang upload...';
     setPct(40);
 
-    const result = await uploadFile(file, `project_${projectId}`);
+    const result = await uploadFile(file, projectId, 'project');
     setPct(80);
 
     statusEl.textContent = 'Lưu metadata…';
@@ -1058,7 +1051,8 @@ async function handleDeleteProjectFile(fileId: string): Promise<void> {
 
   try {
     if (file.storage_path) {
-      await deleteFileFromStorage(file.storage_path, file.kind);
+      const removed=await deleteFileFromStorage(file.storage_path, file.kind, file.id);
+      if(!removed)throw new Error('Chưa xóa được tệp trong kho; giữ nguyên thông tin');
     }
     await deleteProjectFileMeta(fileId);
     ProjectState.files = ProjectState.files.filter((f) => f.id !== fileId);

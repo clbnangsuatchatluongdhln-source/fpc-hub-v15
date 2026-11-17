@@ -15,6 +15,8 @@ import {
 } from './calendar-service';
 import type { Department, EventTone, EventVisibility, Project } from './types';
 import { ymd } from './calendar-utils';
+import { Auth } from '../../core/auth';
+import { canManageClub } from '../../core/access';
 
 export interface OpenCreateModalOptions {
   initialTab?: 'event' | 'project';
@@ -345,7 +347,8 @@ export function openCreateModal(options: OpenCreateModalOptions): void {
 
       const visRow = el('div', { class: 'grid grid-cols-3 gap-2' });
       visRow.dataset.visRow = '1';
-      visRow.dataset.selectedVis = 'public';
+      const defaultVisibility = canManageClub(Auth.profile) ? 'public' : 'private';
+      visRow.dataset.selectedVis = defaultVisibility;
 
       const visOptions: Array<{ v: EventVisibility; icon: string; label: string; desc: string }> = [
         { v: 'public', icon: 'fa-globe', label: 'Toàn CLB', desc: 'Mọi người thấy' },
@@ -354,6 +357,9 @@ export function openCreateModal(options: OpenCreateModalOptions): void {
       ];
 
       for (const opt of visOptions) {
+        if (opt.v === 'public' && !canManageClub(Auth.profile)) continue;
+        if (opt.v === 'department' && !canManageClub(Auth.profile)
+          && !departments.some(department => department.head_id === currentUserId)) continue;
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.dataset.vis = opt.v;
@@ -364,7 +370,7 @@ export function openCreateModal(options: OpenCreateModalOptions): void {
               ? 'bg-pink-500/15 border-pink-500/40 text-pink-300'
               : 'bg-white/[.02] border-white/[.06] text-slate-400 hover:bg-white/[.04]');
         };
-        applyClass(opt.v === 'public');
+        applyClass(opt.v === defaultVisibility);
         btn.innerHTML =
           `<div class="flex items-center gap-2 mb-1"><i class="fa-solid ${opt.icon} text-xs"></i><span class="text-xs font-black">${escHtml(opt.label)}</span></div>` +
           `<div class="text-[10px] opacity-70">${escHtml(opt.desc)}</div>`;
@@ -402,6 +408,7 @@ export function openCreateModal(options: OpenCreateModalOptions): void {
       });
       deptSelect.append(el('option', { value: '', text: '— Chọn ban —' }));
       for (const d of departments) {
+        if (!canManageClub(Auth.profile) && d.head_id !== currentUserId) continue;
         const o = el('option', { value: d.id, text: d.name });
         o.dataset.color = d.color;
         deptSelect.appendChild(o);

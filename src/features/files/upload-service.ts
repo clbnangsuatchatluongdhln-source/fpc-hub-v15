@@ -1,15 +1,15 @@
 import { supabase } from '@/core/supabase';
+import { uploadObject, finalizeObject, removeObject } from '@/core/storage/client';
+import { referenceFromMetadata } from '@/core/storage/types';
+import type { UploadResult as CommonUploadResult } from '@/core/storage/types';
+export { getFileDownloadUrl } from '@/core/storage/legacy-files';
 
 /* ─────────────────────────────────────────────
    TYPES
    ───────────────────────────────────────────── */
 export type StorageType = 'image' | 'document' | 'video';
 
-export interface UploadResult {
-  url: string;
-  fileType: StorageType;
-  storagePath: string;
-}
+export type UploadResult = CommonUploadResult;
 
 export interface AppFile {
   id: string;
@@ -21,6 +21,8 @@ export interface AppFile {
   at: number;
   storage_path: string;
   public_url: string;
+  storage_provider?: string;
+  storage_bucket?: string;
   savedPct?: number;
 }
 
@@ -62,110 +64,29 @@ async function postJson<T>(url: string, body: unknown): Promise<T> {
 /* ─────────────────────────────────────────────
    UPLOAD ROUTING
    ───────────────────────────────────────────── */
-interface UploadUrlResponse {
-  provider: 'b2' | 'imagekit' | 'supabase';
-  storagePath: string;
-  // B2
-  uploadUrl?: string;
-  headers?: Record<string, string>;
-  // ImageKit
-  publicKey?: string;
-  token?: string;
-  expire?: number;
-  signature?: string;
-  fileName?: string;
-  folder?: string;
-  // Supabase
-  signedUrl?: string;
-  publicUrl?: string;
-}
-
-export async function uploadFile(file: File, folder: string = 'general'): Promise<UploadResult> {
-  const type = getStorageType(file);
-  const provider: 'b2' | 'imagekit' | 'supabase' =
-    type === 'image' ? 'imagekit' : type === 'video' ? 'supabase' : 'b2';
-
-  const info = await postJson<UploadUrlResponse>('/api/upload-url', {
-    fileName: file.name,
-    fileType: file.type || 'application/octet-stream',
-    provider,
-    folder,
-  });
-
-  if (info.provider === 'b2') {
-    const put = await fetch(info.uploadUrl!, {
-      method: 'PUT',
-      headers: info.headers ?? { 'Content-Type': file.type || 'application/octet-stream' },
-      body: file,
-    });
-    if (!put.ok) throw new Error(`B2 upload thất bại (${put.status})`);
-    return { url: '', fileType: 'document', storagePath: info.storagePath };
-  }
-
-  if (info.provider === 'imagekit') {
-    const form = new FormData();
-    form.append('file', file);
-    form.append('fileName', info.fileName!);
-    form.append('publicKey', info.publicKey!);
-    form.append('token', info.token!);
-    form.append('expire', String(info.expire!));
-    form.append('signature', info.signature!);
-    if (info.folder) form.append('folder', info.folder);
-
-    const res = await fetch('https://upload.imagekit.io/api/v1/files/upload', {
-      method: 'POST',
-      body: form,
-    });
-    if (!res.ok) {
-      const err = (await res.json().catch(() => ({}))) as { message?: string };
-      throw new Error(err.message || `ImageKit upload thất bại (${res.status})`);
-    }
-    const data = (await res.json()) as { url: string; fileId: string };
-    return { url: data.url, fileType: 'image', storagePath: data.fileId };
-  }
-
-  // supabase
-  const put = await fetch(info.signedUrl!, {
-    method: 'PUT',
-    headers: { 'Content-Type': file.type || 'video/mp4', 'x-upsert': 'false' },
-    body: file,
-  });
-  if (!put.ok) throw new Error(`Supabase upload thất bại (${put.status})`);
-  return { url: info.publicUrl!, fileType: 'video', storagePath: info.storagePath };
+export async function uploadFile(file: File, parentId:string, context:'event'|'project'): Promise<UploadResult> {
+  return uploadObject(file, { target:'legacy', parentId,context });
 }
 
 /* ─────────────────────────────────────────────
    METADATA
    ───────────────────────────────────────────── */
 export async function saveFileMetadata(
-  file: File,
+  _file: File,
   result: UploadResult,
-  folderId: string,
-  context: 'event' | 'project',
+  _folderId: string,
+  _context: 'event' | 'project',
 ): Promise<AppFile> {
-  return postJson<AppFile>('/api/file-metadata', {
-    name: file.name,
-    size: file.size,
-    mimeType: file.type || 'application/octet-stream',
-    kind: result.fileType,
-    storagePath: result.storagePath,
-    publicUrl: result.url,
-    folderId,
-    context,
-  });
+  return finalizeObject<AppFile>(result);
 }
 
 /* ─────────────────────────────────────────────
    DELETE
    ───────────────────────────────────────────── */
-export async function deleteFileFromStorage(storagePath: string, fileType: string): Promise<boolean> {
+export async function deleteFileFromStorage(storagePath: string, fileType: string, fileId?:string): Promise<boolean> {
   try {
-    const data = await postJson<{ success: boolean }>('/api/file-delete', {
-      mode: 'storage',
-      storagePath,
-      kind: fileType,
-    });
-    return data.success;
+    await removeObject(referenceFromMetadata({id:fileId,storage_path:storagePath,kind:fileType},'legacy'));
+    return true;
   } catch (err) {
     console.error('Lỗi khi xóa file:', err);
     return false;

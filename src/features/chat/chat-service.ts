@@ -5,10 +5,13 @@
 
 import type { RealtimeChannel, SupabaseClient } from '@supabase/supabase-js';
 import { Auth } from '../../core/auth';
-import { fmtTime } from '../../utils';
+import { mapDbMessageV2 } from './service/messages';
 import type {
   Conversation,
+  ConversationState,
+  ConversationType,
   DbConversation,
+  DbConversationState,
   DbMessage,
   DbProfile,
   Message,
@@ -36,68 +39,31 @@ function getCurrentUserId(): string | null {
   return Auth.user?.id ?? null;
 }
 
-function getCurrentUserName(): string {
-  const meta = Auth.user?.user_metadata as
-    | { full_name?: string; name?: string }
-    | undefined;
-  return (
-    Auth.profile?.display_name ||
-    meta?.full_name ||
-    meta?.name ||
-    Auth.user?.email?.split('@')[0] ||
-    'Bạn'
-  );
-}
-
-function toTimeString(iso: string | null | undefined): string {
-  if (!iso) return '';
-  try {
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return '';
-    return fmtTime(d);
-  } catch {
-    return '';
-  }
-}
-
 function toMs(iso: string | null | undefined): number {
   if (!iso) return 0;
   const t = new Date(iso).getTime();
   return Number.isNaN(t) ? 0 : t;
 }
 
-function mapDbMessage(m: DbMessage): Message {
-  return {
-    id: m.id,
-    conversation_id: m.conversation_id,
-    convId: m.conversation_id,
-    senderId: m.sender_id,
-    sender_name: m.sender_name ?? 'Thành viên',
-    author: m.sender_name ?? 'Thành viên',
-    text: m.text,
-    status: (m.status ?? 'sent') as MessageStatus,
-    created_at: m.created_at,
-    at: toMs(m.created_at),
-    time: toTimeString(m.created_at),
-  };
-}
-
 function mapDbConversation(
   c: DbConversation,
-  currentUserId: string | null
+  currentUserId: string | null,
+  state?: ConversationState
 ): Conversation {
   const members = Array.isArray(c.members) ? c.members : [];
   const peerId = members.find((id) => id !== currentUserId) ?? c.peer_id ?? undefined;
   return {
     id: c.id,
+    scope: c.scope ?? (c.type === 'channel' ? 'club' : c.type === 'dm' ? 'direct' : 'group'),
+    departmentId: c.department_id,
     type: c.type,
     name: c.name ?? undefined,
     avatar_url: c.avatar_url ?? undefined,
     avatarColor: c.avatar_color ?? DEFAULT_AVATAR_COLOR,
     members,
     peerId,
-    pinned: Boolean(c.pinned),
-    muted: Boolean(c.muted),
+    pinned: state?.isPinned ?? Boolean(c.pinned),
+    muted: state?.isMuted ?? Boolean(c.muted),
     unread: 0,
     lastMessageAt: c.last_message_at ? toMs(c.last_message_at) : toMs(c.created_at),
     created_at: c.created_at,
@@ -125,62 +91,37 @@ export async function fetchConversations(): Promise<Conversation[]> {
   const myId = getCurrentUserId();
   if (!sb || !myId) return [];
 
-  const { data, error } = await sb
-    .from('conversations')
-    .select('*')
-    .order('last_message_at', { ascending: false });
+  const [convRes, stateRes, membershipRes] = await Promise.all([
+    sb.from('conversations').select('*').order('last_message_at', { ascending: false }),
+    sb
+      .from('conversation_states')
+      .select('conversation_id, is_pinned, is_muted, is_archived, version')
+      .eq('user_id', myId),
+    sb.from('department_members').select('department_id').eq('user_id', myId),
+  ]);
 
-  if (error) {
-    console.warn('[chat-service] fetchConversations error:', error.message);
+  if (convRes.error) {
+    console.warn('[chat-service] fetchConversations error:', convRes.error.message);
     return [];
   }
 
-  const rows = (data ?? []) as DbConversation[];
-  const userRows = rows.filter(
-    (c) =>
-      c.type === 'channel' ||
-      (Array.isArray(c.members) && c.members.includes(myId))
-  );
-  return userRows.map((c) => mapDbConversation(c, myId));
-}
-
-export async function fetchMessages(convId: string): Promise<Message[]> {
-  const sb = getSb();
-  if (!sb || !convId) return [];
-
-  const { data, error } = await sb
-    .from('messages')
-    .select('*')
-    .eq('conversation_id', convId)
-    .order('created_at', { ascending: true });
-
-  if (error) {
-    console.warn('[chat-service] fetchMessages error:', error.message);
-    return [];
+  const stateMap = new Map<string, ConversationState>();
+  for (const s of (stateRes.data ?? []) as DbConversationState[]) {
+    stateMap.set(s.conversation_id, {
+      conversationId: s.conversation_id,
+      isPinned: s.is_pinned,
+      isMuted: s.is_muted,
+      isArchived: s.is_archived,
+      version: s.version,
+    });
   }
-  return ((data ?? []) as DbMessage[]).map(mapDbMessage);
-}
 
-export async function fetchMessagesBulk(
-  convIds: string[]
-): Promise<Record<string, Message[]>> {
-  const sb = getSb();
-  if (!sb || convIds.length === 0) return {};
-
-  const { data, error } = await sb
-    .from('messages')
-    .select('*')
-    .in('conversation_id', convIds)
-    .order('created_at', { ascending: true });
-
-  if (error || !data) return {};
-
-  const byConv: Record<string, Message[]> = {};
-  for (const cid of convIds) byConv[cid] = [];
-  for (const row of data as DbMessage[]) {
-    (byConv[row.conversation_id] ??= []).push(mapDbMessage(row));
-  }
-  return byConv;
+  const rows = (convRes.data ?? []) as DbConversation[];
+  const departmentIds = new Set((membershipRes.data ?? []).map(row => row.department_id as string));
+  return rows.filter(c => c.scope === 'department'
+    ? Boolean(c.department_id && departmentIds.has(c.department_id))
+    : c.scope === 'club' || (!c.scope && c.type === 'channel') || c.members?.includes(myId))
+    .map((c) => mapDbConversation(c, myId, stateMap.get(c.id)));
 }
 
 export async function fetchUsers(): Promise<
@@ -188,7 +129,7 @@ export async function fetchUsers(): Promise<
 > {
   const sb = getSb();
   if (!sb) return [];
-  const { data, error } = await sb.from('profiles').select('*');
+  const { data, error } = await sb.from('profiles_public').select('*');
   if (error || !data) return [];
   return (data as DbProfile[]).map((p) => ({
     id: p.id,
@@ -202,54 +143,6 @@ export async function fetchUsers(): Promise<
 /* ============================================================
    WRITE APIS
    ============================================================ */
-
-export async function sendMessage(
-  convId: string,
-  text: string
-): Promise<Message | null> {
-  const sb = getSb();
-  const myId = getCurrentUserId();
-  if (!sb || !myId || !convId) return null;
-
-  const trimmed = text.trim();
-  if (!trimmed) return null;
-
-  const nowIso = new Date().toISOString();
-  const msg: Message = {
-    id: uuid(),
-    conversation_id: convId,
-    convId,
-    senderId: myId,
-    sender_name: getCurrentUserName(),
-    author: getCurrentUserName(),
-    text: trimmed,
-    status: 'sent',
-    created_at: nowIso,
-    at: toMs(nowIso),
-    time: toTimeString(nowIso),
-  };
-
-  const { error: msgErr } = await sb.from('messages').insert({
-    id: msg.id,
-    conversation_id: convId,
-    sender_id: myId,
-    sender_name: msg.sender_name,
-    text: trimmed,
-    status: 'sent',
-    created_at: nowIso,
-  });
-  if (msgErr) {
-    console.error('[chat-service] sendMessage insert failed:', msgErr.message);
-    return null;
-  }
-
-  await sb
-    .from('conversations')
-    .update({ last_message_at: nowIso })
-    .eq('id', convId);
-
-  return msg;
-}
 
 export async function markConversationAsSeen(convId: string): Promise<void> {
   const sb = getSb();
@@ -283,11 +176,14 @@ export async function toggleConvPin(
   pinned: boolean
 ): Promise<void> {
   const sb = getSb();
-  if (!sb || !convId) return;
+  const myId = getCurrentUserId();
+  if (!sb || !myId || !convId) return;
   const { error } = await sb
-    .from('conversations')
-    .update({ pinned })
-    .eq('id', convId);
+    .from('conversation_states')
+    .upsert(
+      { user_id: myId, conversation_id: convId, is_pinned: pinned },
+      { onConflict: 'user_id,conversation_id' }
+    );
   if (error) console.warn('[chat-service] toggleConvPin error:', error.message);
 }
 
@@ -296,11 +192,14 @@ export async function toggleConvMute(
   muted: boolean
 ): Promise<void> {
   const sb = getSb();
-  if (!sb || !convId) return;
+  const myId = getCurrentUserId();
+  if (!sb || !myId || !convId) return;
   const { error } = await sb
-    .from('conversations')
-    .update({ muted })
-    .eq('id', convId);
+    .from('conversation_states')
+    .upsert(
+      { user_id: myId, conversation_id: convId, is_muted: muted },
+      { onConflict: 'user_id,conversation_id' }
+    );
   if (error) console.warn('[chat-service] toggleConvMute error:', error.message);
 }
 
@@ -337,11 +236,10 @@ export async function getOrCreateDM(
     {
       id: newId,
       type: 'dm',
+      scope: 'direct',
       peer_id: userId,
       members,
       created_by: myId,
-      pinned: false,
-      muted: false,
       avatar_color: DEFAULT_AVATAR_COLOR,
       created_at: nowIso,
       last_message_at: nowIso,
@@ -357,6 +255,7 @@ export async function getOrCreateDM(
   return {
     id: newId,
     type: 'dm',
+    scope: 'direct',
     peerId: userId,
     members,
     avatarColor: DEFAULT_AVATAR_COLOR,
@@ -388,12 +287,11 @@ export async function createGroup(
   const { error } = await sb.from('conversations').insert({
     id: groupId,
     type: 'group',
+    scope: 'group',
     name: trimmedName,
     avatar_color: 'violet',
     members: allMembers,
     created_by: myId,
-    pinned: false,
-    muted: false,
     created_at: nowIso,
     last_message_at: nowIso,
   });
@@ -409,6 +307,9 @@ export async function createGroup(
     sender_name: 'Hệ thống',
     text: `Đã tạo nhóm "${trimmedName}"`,
     status: 'seen',
+    client_id: uuid(),
+    type: 'system',
+    content: { event: 'group_created' },
     created_at: nowIso,
   });
 
@@ -481,7 +382,7 @@ export function subscribeToRealtime(
       (payload) => {
         const raw = payload.new as DbMessage | null;
         if (!raw) return;
-        onMessageReceived(mapDbMessage(raw));
+        onMessageReceived(mapDbMessageV2(raw));
       }
     )
     .on(
@@ -504,11 +405,10 @@ export function subscribeToRealtime(
         if (!onConversationChanged) return;
         const raw = payload.new as DbConversation | null;
         if (!raw) return;
-        const isMember =
-          raw.type === 'channel' ||
-          (Array.isArray(raw.members) && raw.members.includes(myId ?? ''));
-        if (!isMember) return;
-        onConversationChanged(mapDbConversation(raw, myId), 'insert');
+        void fetchConversations().then(conversations => {
+          const conversation = conversations.find(item => item.id === raw.id);
+          if (conversation && getCurrentUserId() === myId) onConversationChanged(conversation, 'insert');
+        });
       }
     )
     .on(
@@ -518,7 +418,34 @@ export function subscribeToRealtime(
         if (!onConversationChanged) return;
         const raw = payload.new as DbConversation | null;
         if (!raw) return;
-        onConversationChanged(mapDbConversation(raw, myId), 'update');
+        void fetchConversations().then(conversations => {
+          const conversation = conversations.find(item => item.id === raw.id);
+          if (conversation && getCurrentUserId() === myId) onConversationChanged(conversation, 'update');
+        });
+      }
+    )
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'conversation_states',
+        filter: `user_id=eq.${myId ?? ''}`,
+      },
+      (payload) => {
+        if (!onConversationChanged) return;
+        const raw = payload.new as DbConversationState | null;
+        if (!raw) return;
+        const stub: Conversation = {
+          id: raw.conversation_id,
+          type: 'dm' as ConversationType,
+          members: [],
+          pinned: raw.is_pinned,
+          muted: raw.is_muted,
+          unread: 0,
+          lastMessageAt: 0,
+        };
+        onConversationChanged(stub, 'state');
       }
     )
     .subscribe((status) => {
@@ -534,3 +461,12 @@ export function unsubscribeRealtime(): void {
     console.log('[chat-service] Realtime channel removed');
   }
 }
+
+export {
+  sendMessage,
+  fetchMessages,
+  fetchMessagesBulk,
+  mapDbMessageV2,
+  deriveText,
+} from './service/messages';
+export type { SendMessageInput } from './service/messages';

@@ -28,3 +28,12 @@ dist-ssr
 
 # Windows shortcuts
 *.lnk
+# Added by code-review-graph
+.code-review-graph/
+
+*.storage.local.json
+
+.env
+.env.*
+!.env.example
+.netlify/

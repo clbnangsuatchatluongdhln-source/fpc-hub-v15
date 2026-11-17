@@ -10,6 +10,12 @@ import type { Profile, TaskHistory } from './types';
 export const HISTORY_MODAL_ID = 'taskHistoryModal';
 
 const ACTION_META: Record<string, { icon: string; color: string; label: string }> = {
+  update_task: { icon: 'fa-pen', color: 'cyan', label: 'Cập nhật task' },
+  task_status_changed: { icon: 'fa-arrows-rotate', color: 'violet', label: 'Đổi trạng thái task' },
+  update_subtask: { icon: 'fa-pen', color: 'violet', label: 'Cập nhật subtask' },
+  submission_updated: { icon: 'fa-file', color: 'emerald', label: 'Cập nhật bài nộp' },
+  task_submission_created: { icon: 'fa-paper-plane', color: 'amber', label: 'Tạo bản nộp nghiệm thu' },
+  task_submission_updated: { icon: 'fa-file', color: 'amber', label: 'Cập nhật bản nghiệm thu' },
   create_task:         { icon: 'fa-plus-circle',    color: 'cyan',    label: 'Tạo task' },
   start_working:       { icon: 'fa-play-circle',    color: 'violet',  label: 'Bắt đầu làm' },
   create_subtask:      { icon: 'fa-list-check',     color: 'violet',  label: 'Tạo subtask' },
